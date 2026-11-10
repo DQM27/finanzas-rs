@@ -1,0 +1,25 @@
+[package]
+name = "finanzas-infra-surreal"
+description = "Adaptadores de los puertos sobre SurrealDB (RPC binario por HTTP)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+finanzas-aplicacion.workspace = true
+finanzas-dominio.workspace = true
+base64.workspace = true
+chrono.workspace = true
+ciborium.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+chrono.workspace = true
+uuid.workspace = true
+finanzas-contrato.workspace = true
+pollster = "0.4"
+ureq = "3"
+
+[lints]
+workspace = true

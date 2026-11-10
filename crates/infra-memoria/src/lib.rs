@@ -62,6 +62,11 @@ impl RepositorioPerfiles for PerfilesEnMemoria {
             .find(|p| p.usuario() == usuario)
             .cloned())
     }
+
+    async fn guardar(&self, perfil: &Perfil) -> Result<(), ErrorRepositorio> {
+        self.poner(perfil.clone());
+        Ok(())
+    }
 }
 
 /// Gastos en memoria.
@@ -80,11 +85,13 @@ impl RepositorioGastos for GastosEnMemoria {
         desde: NaiveDate,
         hasta: NaiveDate,
     ) -> Result<Vec<Gasto>, ErrorRepositorio> {
-        Ok(cerrojo(&self.0)
+        let mut gastos: Vec<Gasto> = cerrojo(&self.0)
             .iter()
             .filter(|g| g.usuario() == usuario && desde <= g.fecha() && g.fecha() <= hasta)
             .cloned()
-            .collect())
+            .collect();
+        gastos.sort_by_key(|g| (g.fecha(), g.id()));
+        Ok(gastos)
     }
 }
 
@@ -99,10 +106,12 @@ impl RepositorioExtras for ExtrasEnMemoria {
     }
 
     async fn de_usuario(&self, usuario: UsuarioId) -> Result<Vec<Extra>, ErrorRepositorio> {
-        Ok(cerrojo(&self.0)
+        let mut extras: Vec<Extra> = cerrojo(&self.0)
             .iter()
             .filter(|e| e.usuario() == usuario)
             .cloned()
-            .collect())
+            .collect();
+        extras.sort_by_key(|e| (e.fecha(), e.id()));
+        Ok(extras)
     }
 }

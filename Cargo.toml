@@ -4,6 +4,8 @@ members = [
     "crates/dominio",
     "crates/aplicacion",
     "crates/infra-memoria",
+    "crates/infra-surreal",
+    "crates/contrato",
 ]
 
 [workspace.package]
@@ -18,10 +20,15 @@ chrono = { version = "0.4", default-features = false, features = ["std"] }
 thiserror = "2"
 # Sin generadores (`v4`, `v7`): el dominio recibe los IDs, no los inventa.
 uuid = { version = "1", default-features = false, features = ["std"] }
+# Infraestructura: protocolo binario de SurrealDB y autenticación básica.
+base64 = "0.22"
+ciborium = "0.2"
 
 finanzas-dominio = { path = "crates/dominio" }
 finanzas-aplicacion = { path = "crates/aplicacion" }
 finanzas-infra-memoria = { path = "crates/infra-memoria" }
+finanzas-infra-surreal = { path = "crates/infra-surreal" }
+finanzas-contrato = { path = "crates/contrato" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

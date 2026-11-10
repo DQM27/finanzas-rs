@@ -1,6 +1,7 @@
 # Sistema visual
 
-Especificación visual de `apps/web`. Toma el lenguaje de la app móvil de Lattis (identidad
+Especificación visual de `apps/web`, la app completa en sus dos niveles (celular y
+computadora). Toma el lenguaje de la app móvil de Lattis (identidad
 "Kash"): controles que imitan iOS, formularios agrupados al estilo de Ajustes, barra de
 secciones de vidrio y avisos que bajan desde arriba. La app de Apps Script (v6) ya usa
 estos mismos tokens; sirve de referencia viva mientras la PWA no exista.
@@ -15,6 +16,27 @@ Reglas:
   centrada, con un ancho máximo de 560 px.
 - **El color no carga significado solo.** Un monto negativo lleva signo `−` además del rojo,
   y un pago hecho lleva la marca ✓ además del tachado.
+
+---
+
+## 0. Dos niveles: celular y computadora
+
+Es una sola app con dos niveles, no dos apps. Comparten tokens, componentes y datos;
+cambia qué se muestra y cómo se organiza.
+
+| | Celular (menos de 900 px) | Computadora (900 px o más) |
+|---|---|---|
+| Para qué | Lo del día, en segundos | Administrar y planear |
+| Navegación | Barra de secciones de vidrio abajo | Barra lateral fija a la izquierda |
+| Pantallas | Inicio, Quincena, Anotar | Todo lo del celular, más Proyección, Deudas, Fondo, Calendario de cortes, Historial y Configuración |
+| Diseño | Una columna, grupos de iOS | Varias columnas: resumen arriba, tablas y detalle lado a lado |
+| Tablas | No hay: listas de renglones | Tablas con orden y filtros (historial, deudas, extras) |
+
+- **Lo del celular también existe en la computadora,** con el mismo comportamiento.
+- **Lo exclusivo de la computadora no se esconde en el celular:** queda alcanzable desde
+  «Más», pero en modo de consulta (sin editar el calendario ni la configuración).
+- **El punto de corte es el ancho, no el dispositivo:** una tableta acostada usa la
+  versión de computadora.
 
 ---
 
@@ -192,6 +214,8 @@ Baja desde arriba bajo el área segura con `radio-control`, texto blanco 600 y f
   como `--seccion` y `--seccion-relleno`; cada componente de sección los fija con
   `[attr.data-seccion]`.
 - **Componentes autónomos:** `fz-grupo`, `fz-renglon`, `fz-tarjeta`, `fz-segmentado`,
-  `fz-barra-secciones` y `fz-aviso`. No llevan dependencias de UI de terceros.
+  `fz-barra-secciones`, `fz-barra-lateral`, `fz-tabla` y `fz-aviso`. No llevan
+  dependencias de UI de terceros. El nivel se elige con un solo `BreakpointObserver` a
+  900 px; los componentes no preguntan por el dispositivo.
 - **Montos:** el formato sale de una sola tubería, `colones`, que recibe enteros. La
   aritmética de dinero nunca se hace en TypeScript: viene del dominio (WASM o worker).

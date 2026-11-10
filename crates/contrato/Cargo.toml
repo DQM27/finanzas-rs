@@ -1,0 +1,16 @@
+[package]
+name = "finanzas-contrato"
+description = "Pruebas de contrato que todo adaptador de los puertos tiene que pasar"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+finanzas-aplicacion.workspace = true
+finanzas-dominio.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+
+[lints]
+workspace = true

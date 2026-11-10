@@ -6,6 +6,7 @@ este documento deja de ser cierto, se corrige aquí en el mismo commit que lo ca
 Documentos relacionados:
 
 - [`reglas.md`](reglas.md): catálogo de reglas de negocio con su código y estado.
+- [`diseno.md`](diseno.md): sistema visual de la interfaz.
 - [`../AGENTS.md`](../AGENTS.md): preferencias del usuario y reglas de trabajo.
 
 ---
@@ -23,7 +24,10 @@ deja el sistema listo para varios usuarios.
 Restricciones:
 
 - **Costo cero o casi cero** en la nube (planes gratuitos de Cloudflare y SurrealDB).
-- **Se usa desde el celular** (PWA instalable, sin tienda de aplicaciones).
+- **Una sola app, dos niveles.** En el celular (PWA instalable, sin tienda) va lo del
+  día: anotar, ver caja chica y quincena, marcar pagos. En la computadora va todo:
+  proyecciones, deudas, fondo, calendario de cortes, historial y configuración. Es la
+  app completa, no un formulario como la de Apps Script.
 - **Una sola persona lo mantiene:** poco código, claro, sin frameworks genéricos.
 
 ---
@@ -69,7 +73,8 @@ flowchart TB
 | `dominio` | Entidades, objetos de valor y reglas | `chrono` (sin reloj), `thiserror`, `uuid` (sin generadores) |
 | `aplicacion` | Casos de uso y puertos (traits) | `dominio` |
 | `infra-memoria` | Puertos en memoria para pruebas y desarrollo | `aplicacion`, `dominio` |
-| `infra-surreal` *(siguiente)* | Puertos sobre SurrealDB | `aplicacion`, `dominio` |
+| `infra-surreal` | Puertos sobre SurrealDB (RPC en CBOR por HTTP) | `aplicacion`, `dominio`, `ciborium`, `base64` |
+| `contrato` | Pruebas de contrato que cumple todo adaptador | `aplicacion`, `dominio` (sólo como dependencia de pruebas) |
 | `composicion` *(siguiente)* | Arma los casos de uso con sus adaptadores | todos los de arriba |
 | `apps/worker` *(siguiente)* | API en un Worker de Cloudflare (Rust → WASM) | `composicion` |
 | `apps/web` *(siguiente)* | PWA en Angular; usa el dominio compilado a WASM para validar sin red | `dominio` vía WASM |
@@ -101,6 +106,28 @@ Los puertos son `async fn` en traits, sin exigir `Send`, porque en un Worker de
 Cloudflare (WebAssembly) los futuros no son `Send`. Por eso `aplicacion` declara
 `#![expect(clippy::future_not_send)]` con su razón.
 
+### SurrealDB por RPC binario, con el transporte afuera
+
+`infra-surreal` habla con SurrealDB por su RPC (`POST /rpc`) en CBOR. No se usa JSON
+porque SurrealDB convierte por su cuenta todo texto que parezca fecha o UUID: un concepto
+como `2026-11-12` dejaría de ser texto. Se probó contra SurrealDB 4.0.1.
+
+El crate no trae cliente HTTP: pide un `EnvioHttp`. En producción será el `fetch` del
+Worker; en las pruebas, un cliente nativo. Así compila igual para WebAssembly (lo vigila
+la CI) y no elige runtime. Las consultas están escritas a mano junto a cada repositorio.
+
+El esquema (`crates/infra-surreal/src/esquema.surql`) se puede aplicar las veces que
+haga falta (`OVERWRITE`). Fechas como texto `AAAA-MM-DD`, dinero en enteros, enumerados
+con códigos en MAYÚSCULA validados con `ASSERT`, y el id del registro igual al UUID del
+dominio (en `perfil`, el del usuario).
+
+### Pruebas de contrato
+
+`crates/contrato` define qué tiene que cumplir cada puerto: filtrar por usuario, fechas
+incluidas, orden por fecha y luego por id, guardar y devolver todo campo intacto, que
+guardar un perfil otra vez lo reemplace. `infra-memoria` e `infra-surreal` corren las
+mismas funciones, así que un adaptador no puede comportarse distinto sin que se note.
+
 ### Errores con tipo
 
 Cada módulo del dominio tiene su enum de error (`thiserror`). `ErrorAplicacion` los
@@ -114,10 +141,11 @@ envuelve con `#[from]`, más `PerfilNoEncontrado`, `FueraDeCalendario` y
 - Todo agregado guardado lleva `UsuarioId`.
 - El `Perfil` de cada usuario junta su salario, factor neto, rebajos, tarifas de
   extras, tope de caja chica y calendario de cortes del patrono.
-- En SurrealDB, cada tabla tendrá permisos por registro (`WHERE dueño = $auth.id`):
-  el aislamiento lo impone la base de datos, no sólo la app.
-- `infra-memoria` ya filtra por usuario, y una prueba lo comprueba
-  (`cada_usuario_ve_solo_su_caja_chica`).
+- En SurrealDB las tablas tienen `PERMISSIONS NONE`: ningún usuario final entra
+  directo a la base. Sólo entra el Worker, con un usuario de sistema, después de
+  autenticar a la persona, y toda consulta filtra por `usuario = $usuario`.
+- El aislamiento lo comprueban las pruebas de contrato en los dos adaptadores (un
+  usuario nunca ve lo de otro), además de `cada_usuario_ve_solo_su_caja_chica`.
 
 ---
 
@@ -128,6 +156,14 @@ envuelve con `#[from]`, más `PerfilNoEncontrado`, `FueraDeCalendario` y
   91 168, sobra de la primera quincena 40 929, caja chica 1 050…).
 - **Casos de uso:** `crates/infra-memoria/tests/casos_de_uso.rs`, de punta a punta con
   los adaptadores en memoria.
+- **Contrato de los puertos:** `crates/contrato`, corrido por `infra-memoria` en cada
+  `cargo test` y por `infra-surreal` contra un SurrealDB real. Esas pruebas están
+  marcadas `ignore` porque necesitan el servidor; la CI lo levanta y las corre con
+  `--ignored`. Localmente:
+  `surreal start --user root --pass root memory` y luego
+  `cargo test -p finanzas-infra-surreal -- --ignored`.
+- **WebAssembly:** la CI compila `dominio`, `aplicacion` e `infra-surreal` para
+  `wasm32-unknown-unknown`.
 - **Arquitectura:** `crates/dominio/tests/arquitectura.rs`.
 
 ---
@@ -136,8 +172,8 @@ envuelve con `#[from]`, más `PerfilNoEncontrado`, `FueraDeCalendario` y
 
 En este orden:
 
-1. `infra-surreal`: esquema (`DEFINE TABLE … PERMISSIONS`) y repositorios, con pruebas
-   de contrato compartidas con `infra-memoria`.
+1. ~~`infra-surreal`~~: hecho (esquema, repositorios de perfil, gastos y extras,
+   contrato compartido con `infra-memoria`).
 2. Casos de uso que faltan: quincena (marcar pagos), fondo (retiros y reposición),
    cierre de mes, deshacer.
 3. `apps/worker`: API en Rust sobre Cloudflare Workers.

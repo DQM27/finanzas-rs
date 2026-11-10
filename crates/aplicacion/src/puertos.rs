@@ -32,6 +32,8 @@ pub trait GeneradorIds {
 pub trait RepositorioPerfiles {
     /// El perfil del usuario, si tiene.
     async fn perfil(&self, usuario: UsuarioId) -> Result<Option<Perfil>, ErrorRepositorio>;
+    /// Guarda el perfil; si el usuario ya tenía uno, lo reemplaza.
+    async fn guardar(&self, perfil: &Perfil) -> Result<(), ErrorRepositorio>;
 }
 
 /// Los gastos puntuales.
@@ -42,7 +44,8 @@ pub trait RepositorioPerfiles {
 pub trait RepositorioGastos {
     /// Guarda un gasto nuevo.
     async fn guardar(&self, gasto: &Gasto) -> Result<(), ErrorRepositorio>;
-    /// Los gastos de un usuario entre dos fechas (incluidas).
+    /// Los gastos de un usuario entre dos fechas (incluidas), ordenados por
+    /// fecha y, el mismo día, por identificador.
     async fn entre(
         &self,
         usuario: UsuarioId,
@@ -59,6 +62,7 @@ pub trait RepositorioGastos {
 pub trait RepositorioExtras {
     /// Guarda una extra nueva.
     async fn guardar(&self, extra: &Extra) -> Result<(), ErrorRepositorio>;
-    /// Todas las extras de un usuario.
+    /// Todas las extras de un usuario, ordenadas por fecha y, el mismo día,
+    /// por identificador.
     async fn de_usuario(&self, usuario: UsuarioId) -> Result<Vec<Extra>, ErrorRepositorio>;
 }

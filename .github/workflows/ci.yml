@@ -54,6 +54,43 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --locked
 
+  # Los repositorios de SurrealDB contra un servidor real, con las mismas
+  # pruebas de contrato que pasan los de memoria. La versión va fija: subirla
+  # es un cambio a propósito, no algo que pase solo.
+  contrato-surreal:
+    name: Contrato con SurrealDB
+    runs-on: ubuntu-latest
+    env:
+      SURREAL_VERSION: v4.0.1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Rust del proyecto
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: SurrealDB ${{ env.SURREAL_VERSION }} en memoria
+        run: |
+          curl -sSfL "https://github.com/surrealdb/surrealdb/releases/download/${SURREAL_VERSION}/surreal-${SURREAL_VERSION}.linux-amd64.tgz" | tar xz
+          ./surreal start --user root --pass root --bind 127.0.0.1:8000 memory &
+          for _ in $(seq 30); do curl -sf http://127.0.0.1:8000/health && break; sleep 1; done
+      - run: cargo test --locked -p finanzas-infra-surreal -- --ignored
+
+  # Lo que va a correr en el Worker tiene que compilar a WebAssembly.
+  wasm:
+    name: Compila a WebAssembly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Rust del proyecto
+        run: rustup toolchain install && rustup target add wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - run: >-
+          cargo build --locked --target wasm32-unknown-unknown
+          -p finanzas-dominio -p finanzas-aplicacion -p finanzas-infra-surreal
+
   documentacion:
     name: Documentación (rustdoc sin avisos)
     runs-on: ubuntu-latest
@@ -72,7 +109,7 @@ jobs:
   verificado:
     name: CI verde
     if: always()
-    needs: [formato, clippy, pruebas, documentacion]
+    needs: [formato, clippy, pruebas, contrato-surreal, wasm, documentacion]
     runs-on: ubuntu-latest
     steps:
       - name: Todos los trabajos pasaron
