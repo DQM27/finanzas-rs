@@ -1,0 +1,19 @@
+[package]
+name = "finanzas-infra-memoria"
+description = "Adaptadores en memoria de los puertos, para pruebas y desarrollo"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+finanzas-aplicacion.workspace = true
+finanzas-dominio.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+pollster = "0.4"
+
+[lints]
+workspace = true

@@ -1,0 +1,7 @@
+# Versión de Rust fija para todo el proyecto: la misma en cada máquina, en
+# la CI y en cada sesión. Se sube a propósito, en un commit propio,
+# corrigiendo lo que pidan los lints nuevos.
+[toolchain]
+channel = "1.97.0"
+components = ["clippy", "rustfmt"]
+profile = "minimal"

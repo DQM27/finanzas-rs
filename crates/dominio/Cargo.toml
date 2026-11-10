@@ -1,0 +1,19 @@
+[package]
+name = "finanzas-dominio"
+description = "Reglas de negocio puras: dinero, quincenas, extras, cortes de pago, caja chica y fondo"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# El dominio es puro: sin base de datos, sin red, sin reloj del sistema ni
+# generación aleatoria. Quien llama le pasa la fecha de hoy y los IDs. Así
+# compila igual para el servidor, el navegador (WebAssembly) y las pruebas.
+# La prueba `tests/arquitectura.rs` vigila esta lista.
+[dependencies]
+chrono.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,121 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/dominio",
+    "crates/aplicacion",
+    "crates/infra-memoria",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.97"
+publish = false
+
+[workspace.dependencies]
+# Sin la función `clock`: el dominio no puede leer la hora del sistema.
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+thiserror = "2"
+# Sin generadores (`v4`, `v7`): el dominio recibe los IDs, no los inventa.
+uuid = { version = "1", default-features = false, features = ["std"] }
+
+finanzas-dominio = { path = "crates/dominio" }
+finanzas-aplicacion = { path = "crates/aplicacion" }
+finanzas-infra-memoria = { path = "crates/infra-memoria" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "deny"
+rust_2018_idioms = { level = "deny", priority = -1 }
+unused_qualifications = "deny"
+unused_lifetimes = "deny"
+unused_import_braces = "deny"
+trivial_casts = "deny"
+trivial_numeric_casts = "deny"
+let_underscore_drop = "deny"
+non_ascii_idents = "deny"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+match_same_arms = "deny"
+float_cmp = "deny"
+cast_possible_truncation = "deny"
+cast_possible_wrap = "deny"
+cast_sign_loss = "deny"
+cast_precision_loss = "deny"
+unchecked_time_subtraction = "deny"
+similar_names = "deny"
+map_unwrap_or = "deny"
+option_if_let_else = "deny"
+redundant_closure_for_method_calls = "deny"
+single_match_else = "deny"
+single_match = "deny"
+manual_let_else = "deny"
+needless_collect = "deny"
+wildcard_imports = "deny"
+enum_glob_use = "deny"
+too_many_lines = "deny"
+struct_excessive_bools = "deny"
+missing_fields_in_debug = "deny"
+missing_errors_doc = "allow"
+must_use_candidate = "allow"
+return_self_not_must_use = "allow"
+missing_const_for_fn = "allow"
+too_long_first_doc_paragraph = "allow"
+needless_pass_by_value = "allow"
+suboptimal_flops = "allow"
+doc_markdown = "deny"
+semicolon_if_nothing_returned = "deny"
+assigning_clones = "deny"
+cast_lossless = "deny"
+needless_raw_string_hashes = "deny"
+use_self = "deny"
+elidable_lifetime_names = "deny"
+items_after_statements = "deny"
+equatable_if_let = "deny"
+redundant_pub_crate = "deny"
+ignored_unit_patterns = "deny"
+format_push_string = "deny"
+if_not_else = "deny"
+tuple_array_conversions = "deny"
+unnecessary_semicolon = "deny"
+unreadable_literal = "deny"
+unused_self = "deny"
+useless_let_if_seq = "deny"
+struct_field_names = "deny"
+
+# Más estricto que Lattis (grupo `restriction`, elegido a mano):
+# - nada que pueda tumbar la app en producción (las pruebas sí pueden; ver
+#   clippy.toml);
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+indexing_slicing = "deny"
+string_slice = "deny"
+exit = "deny"
+mem_forget = "deny"
+# - nada de salida de depuración olvidada (se usa `log`);
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+# - excepciones explícitas y justificadas;
+allow_attributes = "deny"
+allow_attributes_without_reason = "deny"
+# - claridad;
+clone_on_ref_ptr = "deny"
+rc_buffer = "deny"
+empty_drop = "deny"
+fn_to_numeric_cast_any = "deny"
+lossy_float_literal = "deny"
+implicit_clone = "deny"
+str_to_string = "deny"
+verbose_file_reads = "deny"
+rest_pat_in_fully_bound_structs = "deny"
+unneeded_field_pattern = "deny"
+if_then_some_else_none = "deny"
+missing_assert_message = "deny"
+tests_outside_test_module = "deny"

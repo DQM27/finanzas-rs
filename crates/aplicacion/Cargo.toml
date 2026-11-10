@@ -1,0 +1,18 @@
+[package]
+name = "finanzas-aplicacion"
+description = "Casos de uso y puertos: orquestan el dominio, no deciden"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Sólo el dominio y crates puras. Nunca un adaptador (base de datos, red):
+# los puertos se definen aquí y la infraestructura los implementa.
+[dependencies]
+finanzas-dominio.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+
+[lints]
+workspace = true
