@@ -141,5 +141,5 @@ En este orden:
 2. Casos de uso que faltan: quincena (marcar pagos), fondo (retiros y reposición),
    cierre de mes, deshacer.
 3. `apps/worker`: API en Rust sobre Cloudflare Workers.
-4. `apps/web`: PWA en Angular.
+4. `apps/web`: PWA en Angular, siguiendo el sistema visual de [`diseno.md`](diseno.md).
 5. Migración de los datos de la hoja.

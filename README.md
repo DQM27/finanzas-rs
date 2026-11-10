@@ -9,6 +9,7 @@ su configuración y sus datos.
 
 - Arquitectura: [`docs/arquitectura.md`](docs/arquitectura.md)
 - Reglas de negocio: [`docs/reglas.md`](docs/reglas.md)
+- Sistema visual: [`docs/diseno.md`](docs/diseno.md)
 
 ## Verificar
 

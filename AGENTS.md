@@ -29,6 +29,8 @@ empezar a trabajar. Resumen:
 - Sin ORM. Las consultas de SurrealDB se escriben a la vista.
 - El catálogo de reglas está en `docs/reglas.md`; cualquier cambio de regla se refleja
   ahí en el mismo commit.
+- La interfaz sigue `docs/diseno.md` (lenguaje de Lattis/Kash): todo color y medida sale
+  de un token, nunca un valor suelto.
 
 ## Verificación antes de cada commit
 
