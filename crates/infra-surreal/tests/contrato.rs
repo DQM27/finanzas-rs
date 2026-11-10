@@ -114,4 +114,10 @@ mod tests {
     fn fondo() {
         pollster::block_on(finanzas_contrato::fondo(&base_nueva()));
     }
+
+    #[test]
+    #[ignore = "necesita SurrealDB: ver el comentario del archivo"]
+    fn quincenas() {
+        pollster::block_on(finanzas_contrato::quincenas(&base_nueva()));
+    }
 }

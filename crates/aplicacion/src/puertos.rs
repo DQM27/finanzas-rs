@@ -10,6 +10,7 @@ use finanzas_dominio::extra::Extra;
 use finanzas_dominio::gasto::Gasto;
 use finanzas_dominio::movimientos_fondo::MovimientoFondo;
 use finanzas_dominio::perfil::Perfil;
+use finanzas_dominio::quincena::Quincena;
 use finanzas_dominio::usuario::UsuarioId;
 use uuid::Uuid;
 
@@ -82,4 +83,21 @@ pub trait RepositorioFondo {
         &self,
         usuario: UsuarioId,
     ) -> Result<Vec<MovimientoFondo>, ErrorRepositorio>;
+}
+
+/// El presupuesto de cada quincena.
+#[expect(
+    async_fn_in_trait,
+    reason = "sin `Send` a propósito: en WebAssembly los futuros no son `Send`"
+)]
+pub trait RepositorioQuincenas {
+    /// Guarda la quincena; si ya había una del mismo usuario y pago, la
+    /// reemplaza.
+    async fn guardar(&self, quincena: &Quincena) -> Result<(), ErrorRepositorio>;
+    /// La quincena de un usuario financiada por el pago de esa fecha.
+    async fn de(
+        &self,
+        usuario: UsuarioId,
+        pago: NaiveDate,
+    ) -> Result<Option<Quincena>, ErrorRepositorio>;
 }

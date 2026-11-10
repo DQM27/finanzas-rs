@@ -20,6 +20,7 @@
 use chrono::NaiveDate;
 use finanzas_aplicacion::puertos::{
     RepositorioExtras, RepositorioFondo, RepositorioGastos, RepositorioPerfiles,
+    RepositorioQuincenas,
 };
 use finanzas_dominio::caja_chica::CajaChica;
 use finanzas_dominio::calendario::{CalendarioCortes, Corte};
@@ -30,6 +31,7 @@ use finanzas_dominio::gasto::{Categoria, DatosGasto, Gasto, GastoId, Origen};
 use finanzas_dominio::movimientos_fondo::{Movimiento, MovimientoFondo, MovimientoFondoId};
 use finanzas_dominio::perfil::{Perfil, PerfilSalarial, TarifasExtra};
 use finanzas_dominio::proporcion::Proporcion;
+use finanzas_dominio::quincena::{Lado, Linea, Quincena};
 use finanzas_dominio::texto::Concepto;
 use finanzas_dominio::usuario::UsuarioId;
 use uuid::Uuid;
@@ -309,5 +311,68 @@ pub async fn fondo<R: RepositorioFondo>(repo: &R) {
     assert!(
         repo.guardar(&pisador).await.is_err(),
         "un id repetido es un error"
+    );
+}
+
+fn linea(concepto: &str, monto: i64) -> Linea {
+    Linea::new(
+        Concepto::new(concepto).expect("concepto válido"),
+        Colones::new(monto),
+    )
+    .expect("línea válida")
+}
+
+/// Contrato de [`RepositorioQuincenas`].
+pub async fn quincenas<R: RepositorioQuincenas>(repo: &R) {
+    let pago_13 = f(2026, 11, 13);
+    let pago_30 = f(2026, 11, 30);
+    assert_eq!(
+        repo.de(DANIEL, pago_13).await,
+        Ok(None),
+        "sin presupuesto, nada"
+    );
+
+    let mut q1 = Quincena::new(
+        DANIEL,
+        pago_13,
+        vec![linea("SALARIO BASE", 232_225), linea("EXTRAS", 103_404)],
+        vec![
+            linea("MOTO", 104_000),
+            linea("COMIDA", 100_000),
+            linea("MOTO", 6_000),
+            linea("SIN MONTO AÚN", 0),
+        ],
+    );
+    q1.marcar(Lado::Pago, 2, true).expect("existe la línea");
+    q1.marcar(Lado::Ingreso, 0, true).expect("existe la línea");
+    assert_eq!(repo.guardar(&q1).await, Ok(()), "guarda Q1");
+    assert_eq!(
+        repo.de(DANIEL, pago_13).await,
+        Ok(Some(q1.clone())),
+        "vuelve con las líneas en orden, los montos en cero y las marcas"
+    );
+
+    q1.marcar(Lado::Pago, 0, true).expect("existe la línea");
+    assert_eq!(repo.guardar(&q1).await, Ok(()), "guarda otra vez");
+    assert_eq!(
+        repo.de(DANIEL, pago_13).await,
+        Ok(Some(q1.clone())),
+        "guardar otra vez reemplaza"
+    );
+
+    let q2 = Quincena::new(DANIEL, pago_30, vec![], vec![linea("INSTACREDIT", 100_000)]);
+    let ajena = Quincena::new(OTRO, pago_13, vec![linea("OTRO SALARIO", 1)], vec![]);
+    assert_eq!(repo.guardar(&q2).await, Ok(()), "guarda Q2");
+    assert_eq!(repo.guardar(&ajena).await, Ok(()), "guarda la del otro");
+    assert_eq!(
+        repo.de(DANIEL, pago_13).await,
+        Ok(Some(q1)),
+        "cada pago tiene su quincena"
+    );
+    assert_eq!(repo.de(DANIEL, pago_30).await, Ok(Some(q2)), "Q2");
+    assert_eq!(
+        repo.de(OTRO, pago_13).await,
+        Ok(Some(ajena)),
+        "el otro usuario ve sólo la suya"
     );
 }

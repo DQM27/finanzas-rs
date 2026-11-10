@@ -8,12 +8,13 @@ use chrono::NaiveDate;
 use finanzas_aplicacion::errores::ErrorRepositorio;
 use finanzas_aplicacion::puertos::{
     GeneradorIds, Reloj, RepositorioExtras, RepositorioFondo, RepositorioGastos,
-    RepositorioPerfiles,
+    RepositorioPerfiles, RepositorioQuincenas,
 };
 use finanzas_dominio::extra::Extra;
 use finanzas_dominio::gasto::Gasto;
 use finanzas_dominio::movimientos_fondo::MovimientoFondo;
 use finanzas_dominio::perfil::Perfil;
+use finanzas_dominio::quincena::Quincena;
 use finanzas_dominio::usuario::UsuarioId;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
@@ -155,5 +156,30 @@ impl RepositorioFondo for FondoEnMemoria {
             .collect();
         movimientos.sort_by_key(|m| (m.fecha(), m.id()));
         Ok(movimientos)
+    }
+}
+
+/// Quincenas en memoria.
+#[derive(Debug, Default)]
+pub struct QuincenasEnMemoria(Mutex<Vec<Quincena>>);
+
+impl RepositorioQuincenas for QuincenasEnMemoria {
+    async fn guardar(&self, quincena: &Quincena) -> Result<(), ErrorRepositorio> {
+        let mut quincenas = cerrojo(&self.0);
+        quincenas.retain(|q| (q.usuario(), q.pago()) != (quincena.usuario(), quincena.pago()));
+        quincenas.push(quincena.clone());
+        drop(quincenas);
+        Ok(())
+    }
+
+    async fn de(
+        &self,
+        usuario: UsuarioId,
+        pago: NaiveDate,
+    ) -> Result<Option<Quincena>, ErrorRepositorio> {
+        Ok(cerrojo(&self.0)
+            .iter()
+            .find(|q| q.usuario() == usuario && q.pago() == pago)
+            .cloned())
     }
 }

@@ -35,6 +35,10 @@ pub fn mapa_de(campos: Vec<(&str, Value)>) -> Value {
     )
 }
 
+pub const fn booleano(b: bool) -> Value {
+    Value::Bool(b)
+}
+
 pub fn texto(s: &str) -> Value {
     Value::Text(s.to_owned())
 }
@@ -93,6 +97,13 @@ impl<'a> Registro<'a> {
                 i64::try_from(*n).map_err(|_| error(format!("`{nombre}` se sale de i64")))
             }
             otro => Err(error(format!("`{nombre}` no es entero: {otro:?}"))),
+        }
+    }
+
+    pub fn booleano(self, nombre: &str) -> Result<bool, ErrorRepositorio> {
+        match self.campo(nombre)? {
+            Value::Bool(b) => Ok(*b),
+            otro => Err(error(format!("`{nombre}` no es booleano: {otro:?}"))),
         }
     }
 

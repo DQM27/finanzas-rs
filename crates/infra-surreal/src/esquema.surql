@@ -69,3 +69,18 @@ DEFINE FIELD OVERWRITE plan.a_reponer ON movimiento_fondo TYPE int ASSERT $value
 DEFINE FIELD OVERWRITE plan.meses ON movimiento_fondo TYPE int ASSERT $value > 0;
 DEFINE FIELD OVERWRITE plan.cuota_mensual ON movimiento_fondo TYPE int ASSERT $value > 0;
 DEFINE INDEX OVERWRITE movimiento_fondo_usuario_fecha ON movimiento_fondo FIELDS usuario, fecha;
+
+-- Presupuesto de cada quincena. El id es [usuario, pago]: una sola quincena
+-- por usuario y fecha de pago. Las líneas van en orden; la posición importa.
+DEFINE TABLE OVERWRITE quincena SCHEMAFULL PERMISSIONS NONE;
+DEFINE FIELD OVERWRITE usuario ON quincena TYPE string;
+DEFINE FIELD OVERWRITE pago ON quincena TYPE string;
+DEFINE FIELD OVERWRITE ingresos ON quincena TYPE array<object>;
+DEFINE FIELD OVERWRITE ingresos[*].concepto ON quincena TYPE string;
+DEFINE FIELD OVERWRITE ingresos[*].monto ON quincena TYPE int ASSERT $value >= 0;
+DEFINE FIELD OVERWRITE ingresos[*].hecho ON quincena TYPE bool;
+DEFINE FIELD OVERWRITE pagos ON quincena TYPE array<object>;
+DEFINE FIELD OVERWRITE pagos[*].concepto ON quincena TYPE string;
+DEFINE FIELD OVERWRITE pagos[*].monto ON quincena TYPE int ASSERT $value >= 0;
+DEFINE FIELD OVERWRITE pagos[*].hecho ON quincena TYPE bool;
+DEFINE INDEX OVERWRITE quincena_usuario_pago ON quincena FIELDS usuario, pago UNIQUE;

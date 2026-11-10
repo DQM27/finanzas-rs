@@ -1,7 +1,12 @@
 //! Presupuesto de una quincena: lo que entra, lo que se paga y lo que sobra.
+//!
+//! Cada quincena es de un usuario y se identifica por la fecha del pago que la
+//! financia (la fecha de pago de un corte del calendario).
 
 use crate::dinero::Colones;
 use crate::texto::Concepto;
+use crate::usuario::UsuarioId;
+use chrono::NaiveDate;
 use thiserror::Error;
 
 /// Una línea del presupuesto (un ingreso o un pago).
@@ -26,13 +31,22 @@ pub enum ErrorQuincena {
 impl Linea {
     /// Crea una línea pendiente.
     pub fn new(concepto: Concepto, monto: Colones) -> Result<Self, ErrorQuincena> {
+        Self::reconstruir(concepto, monto, false)
+    }
+
+    /// Reconstruye una línea guardada, con su marca.
+    pub fn reconstruir(
+        concepto: Concepto,
+        monto: Colones,
+        hecho: bool,
+    ) -> Result<Self, ErrorQuincena> {
         if monto.es_negativo() {
             return Err(ErrorQuincena::MontoNegativo);
         }
         Ok(Self {
             concepto,
             monto,
-            hecho: false,
+            hecho,
         })
     }
 
@@ -53,8 +67,10 @@ impl Linea {
 }
 
 /// El presupuesto de una quincena.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Quincena {
+    usuario: UsuarioId,
+    pago: NaiveDate,
     ingresos: Vec<Linea>,
     pagos: Vec<Linea>,
 }
@@ -70,8 +86,58 @@ pub enum Lado {
 
 impl Quincena {
     /// Una quincena con sus líneas.
-    pub const fn new(ingresos: Vec<Linea>, pagos: Vec<Linea>) -> Self {
-        Self { ingresos, pagos }
+    pub const fn new(
+        usuario: UsuarioId,
+        pago: NaiveDate,
+        ingresos: Vec<Linea>,
+        pagos: Vec<Linea>,
+    ) -> Self {
+        Self {
+            usuario,
+            pago,
+            ingresos,
+            pagos,
+        }
+    }
+
+    /// Reemplaza el presupuesto por uno nuevo sin perder lo ya marcado: una
+    /// línea nueva queda hecha si en la anterior había una del mismo lado, con
+    /// el mismo concepto, marcada (Q4). Si el concepto se repite, se empareja
+    /// en orden.
+    pub fn con_presupuesto(&self, ingresos: Vec<Linea>, pagos: Vec<Linea>) -> Self {
+        fn heredar(anteriores: &[Linea], nuevas: Vec<Linea>) -> Vec<Linea> {
+            let mut usadas = vec![false; anteriores.len()];
+            nuevas
+                .into_iter()
+                .map(|mut linea| {
+                    let pareja = anteriores
+                        .iter()
+                        .zip(usadas.iter_mut())
+                        .find(|(a, usada)| !**usada && a.concepto == linea.concepto);
+                    if let Some((anterior, usada)) = pareja {
+                        *usada = true;
+                        linea.hecho = anterior.hecho;
+                    }
+                    linea
+                })
+                .collect()
+        }
+        Self {
+            usuario: self.usuario,
+            pago: self.pago,
+            ingresos: heredar(&self.ingresos, ingresos),
+            pagos: heredar(&self.pagos, pagos),
+        }
+    }
+
+    /// Dueño.
+    pub const fn usuario(&self) -> UsuarioId {
+        self.usuario
+    }
+
+    /// Fecha del pago que financia esta quincena.
+    pub const fn pago(&self) -> NaiveDate {
+        self.pago
     }
 
     /// Marca o desmarca una línea como hecha.
@@ -135,6 +201,13 @@ mod tests {
     use super::{ErrorQuincena, Lado, Linea, Quincena};
     use crate::dinero::Colones;
     use crate::texto::Concepto;
+    use crate::usuario::UsuarioId;
+    use chrono::NaiveDate;
+    use uuid::Uuid;
+
+    fn pago_13() -> NaiveDate {
+        NaiveDate::from_ymd_opt(2026, 11, 13).unwrap()
+    }
 
     fn l(concepto: &str, monto: i64) -> Linea {
         Linea::new(Concepto::new(concepto).unwrap(), Colones::new(monto)).unwrap()
@@ -143,6 +216,8 @@ mod tests {
     /// La quincena del 13 de noviembre de 2026, tal como está en la hoja.
     fn q1_noviembre() -> Quincena {
         Quincena::new(
+            UsuarioId::new(Uuid::from_u128(1)),
+            pago_13(),
             vec![
                 l("salario base", 232_225),
                 l("extras", 103_404),
@@ -190,6 +265,54 @@ mod tests {
             Linea::new(Concepto::new("x").unwrap(), Colones::new(-1)),
             Err(ErrorQuincena::MontoNegativo),
             "negativo"
+        );
+    }
+
+    #[test]
+    fn cambiar_el_presupuesto_conserva_lo_marcado() {
+        let mut q = q1_noviembre();
+        q.marcar(Lado::Pago, 0, true).unwrap(); // moto
+        q.marcar(Lado::Pago, 4, true).unwrap(); // internet
+        q.marcar(Lado::Ingreso, 0, true).unwrap(); // salario
+        let nueva = q.con_presupuesto(
+            vec![l("salario base", 232_225), l("extras", 91_168)],
+            vec![
+                l("moto", 125_000),
+                l("comida", 100_000),
+                l("refri", 30_000),
+                l("internet", 23_000),
+            ],
+        );
+        assert_eq!(nueva.pago(), pago_13(), "misma quincena");
+        let marcas: Vec<bool> = nueva.pagos().iter().map(Linea::hecho).collect();
+        assert_eq!(
+            marcas,
+            vec![true, false, false, true],
+            "la moto y el internet siguen pagados aunque cambie el monto o la posición"
+        );
+        assert!(nueva.ingresos()[0].hecho(), "el salario sigue recibido");
+        assert_eq!(
+            nueva.falta_por_pagar(),
+            Colones::new(130_000),
+            "comida + refri"
+        );
+    }
+
+    #[test]
+    fn un_concepto_repetido_hereda_en_orden() {
+        let mut q = Quincena::new(
+            UsuarioId::new(Uuid::from_u128(1)),
+            pago_13(),
+            vec![],
+            vec![l("cuota", 10), l("cuota", 20)],
+        );
+        q.marcar(Lado::Pago, 0, true).unwrap();
+        let nueva = q.con_presupuesto(vec![], vec![l("cuota", 10), l("cuota", 20), l("cuota", 30)]);
+        let marcas: Vec<bool> = nueva.pagos().iter().map(Linea::hecho).collect();
+        assert_eq!(
+            marcas,
+            vec![true, false, false],
+            "sólo la primera estaba pagada"
         );
     }
 }

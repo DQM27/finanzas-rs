@@ -152,6 +152,11 @@ impl CalendarioCortes {
         Some((desde, hasta))
     }
 
+    /// `true` si en esa fecha cae el pago de algún corte (Q5).
+    pub fn es_dia_de_pago(&self, fecha: NaiveDate) -> bool {
+        self.cortes.iter().any(|c| c.pago == fecha)
+    }
+
     /// Los cortes, ordenados.
     pub fn cortes(&self) -> &[Corte] {
         &self.cortes

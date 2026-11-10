@@ -8,6 +8,7 @@ use ciborium::Value;
 use finanzas_aplicacion::errores::ErrorRepositorio;
 use finanzas_aplicacion::puertos::{
     RepositorioExtras, RepositorioFondo, RepositorioGastos, RepositorioPerfiles,
+    RepositorioQuincenas,
 };
 use finanzas_dominio::caja_chica::CajaChica;
 use finanzas_dominio::calendario::{CalendarioCortes, Corte};
@@ -17,6 +18,7 @@ use finanzas_dominio::gasto::{DatosGasto, Gasto, GastoId};
 use finanzas_dominio::movimientos_fondo::{Movimiento, MovimientoFondo, MovimientoFondoId};
 use finanzas_dominio::perfil::{Perfil, PerfilSalarial, TarifasExtra};
 use finanzas_dominio::proporcion::Proporcion;
+use finanzas_dominio::quincena::{Linea, Quincena};
 use finanzas_dominio::texto::Concepto;
 use finanzas_dominio::usuario::UsuarioId;
 use std::fmt::Display;
@@ -384,5 +386,92 @@ impl<H: EnvioHttp> RepositorioFondo for Surreal<H> {
             .iter()
             .map(movimiento_de_cbor)
             .collect()
+    }
+}
+
+// --------------------------------------------------------------- quincenas
+
+const GUARDAR_QUINCENA: &str =
+    "UPSERT type::record('quincena', [$usuario, $pago]) CONTENT $quincena RETURN NONE;";
+const LEER_QUINCENA: &str =
+    "SELECT * OMIT id FROM quincena WHERE usuario = $usuario AND pago = $pago;";
+
+fn lineas_a_cbor(lineas: &[Linea]) -> Value {
+    Value::Array(
+        lineas
+            .iter()
+            .map(|l| {
+                mapa([
+                    ("concepto", cbor::texto(l.concepto().como_str())),
+                    ("monto", cbor::colones(l.monto())),
+                    ("hecho", cbor::booleano(l.hecho())),
+                ])
+            })
+            .collect(),
+    )
+}
+
+fn lineas_de_cbor(r: Registro<'_>, lado: &str) -> Result<Vec<Linea>, ErrorRepositorio> {
+    r.lista(lado)?
+        .iter()
+        .map(|l| {
+            let l = Registro::de(l)?;
+            let concepto =
+                Concepto::new(l.texto("concepto")?).map_err(|e| invalido("un concepto")(&e))?;
+            Linea::reconstruir(concepto, l.colones("monto")?, l.booleano("hecho")?)
+                .map_err(|e| invalido("una línea de quincena")(&e))
+        })
+        .collect()
+}
+
+fn quincena_de_cbor(valor: &Value) -> Result<Quincena, ErrorRepositorio> {
+    let r = Registro::de(valor)?;
+    Ok(Quincena::new(
+        UsuarioId::new(r.uuid("usuario")?),
+        r.fecha("pago")?,
+        lineas_de_cbor(r, "ingresos")?,
+        lineas_de_cbor(r, "pagos")?,
+    ))
+}
+
+impl<H: EnvioHttp> RepositorioQuincenas for Surreal<H> {
+    async fn guardar(&self, q: &Quincena) -> Result<(), ErrorRepositorio> {
+        let datos = mapa([
+            ("usuario", usuario(q.usuario())),
+            ("pago", cbor::fecha(q.pago())),
+            ("ingresos", lineas_a_cbor(q.ingresos())),
+            ("pagos", lineas_a_cbor(q.pagos())),
+        ]);
+        self.cliente
+            .consulta(
+                GUARDAR_QUINCENA,
+                [
+                    ("usuario", usuario(q.usuario())),
+                    ("pago", cbor::fecha(q.pago())),
+                    ("quincena", datos),
+                ],
+            )
+            .await
+            .map(drop)
+    }
+
+    async fn de(
+        &self,
+        id: UsuarioId,
+        pago: NaiveDate,
+    ) -> Result<Option<Quincena>, ErrorRepositorio> {
+        let filas = self
+            .seleccionar(
+                LEER_QUINCENA,
+                [("usuario", usuario(id)), ("pago", cbor::fecha(pago))],
+            )
+            .await?;
+        match filas.as_slice() {
+            [] => Ok(None),
+            [fila] => quincena_de_cbor(fila).map(Some),
+            _ => Err(error(
+                "hay más de una quincena para el mismo usuario y pago",
+            )),
+        }
     }
 }
