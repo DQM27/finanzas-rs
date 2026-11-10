@@ -50,3 +50,22 @@ DEFINE FIELD OVERWRITE tipo ON extra TYPE string
     ASSERT $value IN ["NOCTURNA", "DIURNA", "ESPECIAL", "FERIADO", "OTRA"];
 DEFINE FIELD OVERWRITE bruto ON extra TYPE int ASSERT $value > 0;
 DEFINE INDEX OVERWRITE extra_usuario_fecha ON extra FIELDS usuario, fecha;
+
+-- Movimientos del fondo de emergencia. El saldo no se guarda: lo calcula el
+-- dominio a partir de esta lista. `plan` sólo existe en los retiros.
+DEFINE TABLE OVERWRITE movimiento_fondo SCHEMAFULL PERMISSIONS NONE;
+DEFINE FIELD OVERWRITE usuario ON movimiento_fondo TYPE string;
+DEFINE FIELD OVERWRITE fecha ON movimiento_fondo TYPE string;
+DEFINE FIELD OVERWRITE concepto ON movimiento_fondo TYPE string;
+DEFINE FIELD OVERWRITE monto ON movimiento_fondo TYPE int ASSERT $value > 0;
+-- Un retiro siempre trae su plan y ningún otro movimiento lo trae.
+DEFINE FIELD OVERWRITE tipo ON movimiento_fondo TYPE string
+    ASSERT $value IN ["APORTE", "RETIRO", "REPOSICION"]
+        AND ($this.plan != NONE) = ($value = "RETIRO");
+DEFINE FIELD OVERWRITE plan ON movimiento_fondo TYPE option<object>;
+DEFINE FIELD OVERWRITE plan.nivel ON movimiento_fondo TYPE string
+    ASSERT $value IN ["VITAL", "TRABAJO", "DESCUIDO", "FALTA"];
+DEFINE FIELD OVERWRITE plan.a_reponer ON movimiento_fondo TYPE int ASSERT $value > 0;
+DEFINE FIELD OVERWRITE plan.meses ON movimiento_fondo TYPE int ASSERT $value > 0;
+DEFINE FIELD OVERWRITE plan.cuota_mensual ON movimiento_fondo TYPE int ASSERT $value > 0;
+DEFINE INDEX OVERWRITE movimiento_fondo_usuario_fecha ON movimiento_fondo FIELDS usuario, fecha;

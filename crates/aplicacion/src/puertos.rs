@@ -8,6 +8,7 @@ use crate::errores::ErrorRepositorio;
 use chrono::NaiveDate;
 use finanzas_dominio::extra::Extra;
 use finanzas_dominio::gasto::Gasto;
+use finanzas_dominio::movimientos_fondo::MovimientoFondo;
 use finanzas_dominio::perfil::Perfil;
 use finanzas_dominio::usuario::UsuarioId;
 use uuid::Uuid;
@@ -65,4 +66,20 @@ pub trait RepositorioExtras {
     /// Todas las extras de un usuario, ordenadas por fecha y, el mismo día,
     /// por identificador.
     async fn de_usuario(&self, usuario: UsuarioId) -> Result<Vec<Extra>, ErrorRepositorio>;
+}
+
+/// Los movimientos del fondo de emergencia.
+#[expect(
+    async_fn_in_trait,
+    reason = "sin `Send` a propósito: en WebAssembly los futuros no son `Send`"
+)]
+pub trait RepositorioFondo {
+    /// Guarda un movimiento nuevo.
+    async fn guardar(&self, movimiento: &MovimientoFondo) -> Result<(), ErrorRepositorio>;
+    /// Todos los movimientos de un usuario, ordenados por fecha y, el mismo
+    /// día, por identificador.
+    async fn de_usuario(
+        &self,
+        usuario: UsuarioId,
+    ) -> Result<Vec<MovimientoFondo>, ErrorRepositorio>;
 }

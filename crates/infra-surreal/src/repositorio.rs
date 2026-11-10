@@ -1,16 +1,20 @@
 //! Los repositorios sobre SurrealDB. Cada consulta filtra por usuario.
 
-use crate::cbor::{self, Registro, error, filas, mapa};
+use crate::cbor::{self, Registro, error, filas, mapa, mapa_de};
 use crate::cliente::{ClienteSurreal, EnvioHttp};
 use crate::codigos;
 use chrono::NaiveDate;
 use ciborium::Value;
 use finanzas_aplicacion::errores::ErrorRepositorio;
-use finanzas_aplicacion::puertos::{RepositorioExtras, RepositorioGastos, RepositorioPerfiles};
+use finanzas_aplicacion::puertos::{
+    RepositorioExtras, RepositorioFondo, RepositorioGastos, RepositorioPerfiles,
+};
 use finanzas_dominio::caja_chica::CajaChica;
 use finanzas_dominio::calendario::{CalendarioCortes, Corte};
 use finanzas_dominio::extra::{Extra, ExtraId, TipoExtra};
+use finanzas_dominio::fondo::PlanReposicion;
 use finanzas_dominio::gasto::{DatosGasto, Gasto, GastoId};
+use finanzas_dominio::movimientos_fondo::{Movimiento, MovimientoFondo, MovimientoFondoId};
 use finanzas_dominio::perfil::{Perfil, PerfilSalarial, TarifasExtra};
 use finanzas_dominio::proporcion::Proporcion;
 use finanzas_dominio::texto::Concepto;
@@ -285,6 +289,100 @@ impl<H: EnvioHttp> RepositorioExtras for Surreal<H> {
             .await?
             .iter()
             .map(extra_de_cbor)
+            .collect()
+    }
+}
+
+// ------------------------------------------------------------------- fondo
+
+const GUARDAR_MOVIMIENTO: &str =
+    "CREATE type::record('movimiento_fondo', $id) CONTENT $movimiento RETURN NONE;";
+const MOVIMIENTOS_DE: &str = "\
+    SELECT meta::id(id) AS id, usuario, fecha, concepto, monto, tipo, plan \
+    FROM movimiento_fondo WHERE usuario = $usuario ORDER BY fecha, id;";
+
+fn movimiento_a_cbor(m: &MovimientoFondo) -> Value {
+    let mut campos = vec![
+        ("usuario", usuario(m.usuario())),
+        ("fecha", cbor::fecha(m.fecha())),
+        ("concepto", cbor::texto(m.concepto().como_str())),
+        ("monto", cbor::colones(m.monto())),
+    ];
+    match m.movimiento() {
+        Movimiento::Aporte => campos.push(("tipo", cbor::texto("APORTE"))),
+        Movimiento::Reposicion => campos.push(("tipo", cbor::texto("REPOSICION"))),
+        Movimiento::Retiro(plan) => {
+            campos.push(("tipo", cbor::texto("RETIRO")));
+            campos.push((
+                "plan",
+                mapa([
+                    ("nivel", cbor::texto(codigos::nivel(plan.nivel))),
+                    ("a_reponer", cbor::colones(plan.a_reponer)),
+                    ("meses", cbor::entero(i64::from(plan.meses))),
+                    ("cuota_mensual", cbor::colones(plan.cuota_mensual)),
+                ]),
+            ));
+        }
+    }
+    mapa_de(campos)
+}
+
+fn movimiento_de_cbor(valor: &Value) -> Result<MovimientoFondo, ErrorRepositorio> {
+    let r = Registro::de(valor)?;
+    let monto = r.colones("monto")?;
+    if !monto.es_positivo() {
+        return Err(error(
+            "un movimiento del fondo guardado tiene monto no positivo",
+        ));
+    }
+    let movimiento = match (r.texto("tipo")?, r.registro_opcional("plan")?) {
+        ("APORTE", None) => Movimiento::Aporte,
+        ("REPOSICION", None) => Movimiento::Reposicion,
+        ("RETIRO", Some(p)) => Movimiento::Retiro(PlanReposicion {
+            nivel: codigos::a_nivel(p.texto("nivel")?)?,
+            sacado: monto,
+            a_reponer: p.colones("a_reponer")?,
+            meses: u8::try_from(p.entero("meses")?)
+                .map_err(|_| error("meses de reposición fuera de rango"))?,
+            cuota_mensual: p.colones("cuota_mensual")?,
+        }),
+        (tipo, plan) => {
+            return Err(error(format!(
+                "movimiento del fondo incoherente: tipo {tipo}, con plan: {}",
+                plan.is_some()
+            )));
+        }
+    };
+    let concepto = Concepto::new(r.texto("concepto")?).map_err(|e| invalido("un concepto")(&e))?;
+    Ok(MovimientoFondo::reconstruir(
+        MovimientoFondoId::new(r.uuid("id")?),
+        UsuarioId::new(r.uuid("usuario")?),
+        r.fecha("fecha")?,
+        concepto,
+        monto,
+        movimiento,
+    ))
+}
+
+impl<H: EnvioHttp> RepositorioFondo for Surreal<H> {
+    async fn guardar(&self, movimiento: &MovimientoFondo) -> Result<(), ErrorRepositorio> {
+        self.cliente
+            .consulta(
+                GUARDAR_MOVIMIENTO,
+                [
+                    ("id", cbor::uuid(movimiento.id().uuid())),
+                    ("movimiento", movimiento_a_cbor(movimiento)),
+                ],
+            )
+            .await
+            .map(drop)
+    }
+
+    async fn de_usuario(&self, id: UsuarioId) -> Result<Vec<MovimientoFondo>, ErrorRepositorio> {
+        self.seleccionar(MOVIMIENTOS_DE, [("usuario", usuario(id))])
+            .await?
+            .iter()
+            .map(movimiento_de_cbor)
             .collect()
     }
 }

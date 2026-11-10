@@ -7,10 +7,12 @@
 use chrono::NaiveDate;
 use finanzas_aplicacion::errores::ErrorRepositorio;
 use finanzas_aplicacion::puertos::{
-    GeneradorIds, Reloj, RepositorioExtras, RepositorioGastos, RepositorioPerfiles,
+    GeneradorIds, Reloj, RepositorioExtras, RepositorioFondo, RepositorioGastos,
+    RepositorioPerfiles,
 };
 use finanzas_dominio::extra::Extra;
 use finanzas_dominio::gasto::Gasto;
+use finanzas_dominio::movimientos_fondo::MovimientoFondo;
 use finanzas_dominio::perfil::Perfil;
 use finanzas_dominio::usuario::UsuarioId;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -20,6 +22,25 @@ use uuid::Uuid;
 fn cerrojo<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
     // Un pánico en otra prueba no debe envenenar a las demás.
     m.lock().unwrap_or_else(PoisonError::into_inner)
+}
+
+/// Agrega un registro. Igual que SurrealDB, guardar dos veces el mismo id es
+/// un error, no una sobrescritura.
+fn insertar<T: Clone, K: PartialEq + std::fmt::Debug>(
+    m: &Mutex<Vec<T>>,
+    nuevo: &T,
+    id: impl Fn(&T) -> K,
+) -> Result<(), ErrorRepositorio> {
+    let mut lista = cerrojo(m);
+    if lista.iter().any(|x| id(x) == id(nuevo)) {
+        return Err(ErrorRepositorio(format!(
+            "ya existe un registro con el id {:?}",
+            id(nuevo)
+        )));
+    }
+    lista.push(nuevo.clone());
+    drop(lista);
+    Ok(())
 }
 
 /// Un reloj que siempre dice la misma fecha.
@@ -75,8 +96,7 @@ pub struct GastosEnMemoria(Mutex<Vec<Gasto>>);
 
 impl RepositorioGastos for GastosEnMemoria {
     async fn guardar(&self, gasto: &Gasto) -> Result<(), ErrorRepositorio> {
-        cerrojo(&self.0).push(gasto.clone());
-        Ok(())
+        insertar(&self.0, gasto, Gasto::id)
     }
 
     async fn entre(
@@ -101,8 +121,7 @@ pub struct ExtrasEnMemoria(Mutex<Vec<Extra>>);
 
 impl RepositorioExtras for ExtrasEnMemoria {
     async fn guardar(&self, extra: &Extra) -> Result<(), ErrorRepositorio> {
-        cerrojo(&self.0).push(extra.clone());
-        Ok(())
+        insertar(&self.0, extra, Extra::id)
     }
 
     async fn de_usuario(&self, usuario: UsuarioId) -> Result<Vec<Extra>, ErrorRepositorio> {
@@ -113,5 +132,28 @@ impl RepositorioExtras for ExtrasEnMemoria {
             .collect();
         extras.sort_by_key(|e| (e.fecha(), e.id()));
         Ok(extras)
+    }
+}
+
+/// Movimientos del fondo en memoria.
+#[derive(Debug, Default)]
+pub struct FondoEnMemoria(Mutex<Vec<MovimientoFondo>>);
+
+impl RepositorioFondo for FondoEnMemoria {
+    async fn guardar(&self, movimiento: &MovimientoFondo) -> Result<(), ErrorRepositorio> {
+        insertar(&self.0, movimiento, MovimientoFondo::id)
+    }
+
+    async fn de_usuario(
+        &self,
+        usuario: UsuarioId,
+    ) -> Result<Vec<MovimientoFondo>, ErrorRepositorio> {
+        let mut movimientos: Vec<MovimientoFondo> = cerrojo(&self.0)
+            .iter()
+            .filter(|m| m.usuario() == usuario)
+            .cloned()
+            .collect();
+        movimientos.sort_by_key(|m| (m.fecha(), m.id()));
+        Ok(movimientos)
     }
 }

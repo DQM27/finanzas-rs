@@ -1,7 +1,9 @@
 //! Errores de los casos de uso.
 
 use finanzas_dominio::extra::ErrorExtra;
+use finanzas_dominio::fondo::RechazoRetiro;
 use finanzas_dominio::gasto::ErrorGasto;
+use finanzas_dominio::movimientos_fondo::ErrorFondo;
 use finanzas_dominio::texto::ErrorConcepto;
 use thiserror::Error;
 
@@ -28,6 +30,12 @@ pub enum ErrorAplicacion {
     /// La extra no es válida.
     #[error(transparent)]
     Extra(#[from] ErrorExtra),
+    /// El movimiento del fondo no es válido.
+    #[error(transparent)]
+    Fondo(#[from] ErrorFondo),
+    /// El dominio no autorizó sacar del fondo.
+    #[error(transparent)]
+    RetiroRechazado(#[from] RechazoRetiro),
     /// Falló el almacenamiento.
     #[error(transparent)]
     Repositorio(#[from] ErrorRepositorio),

@@ -4,6 +4,7 @@
 use crate::cbor::error;
 use finanzas_aplicacion::errores::ErrorRepositorio;
 use finanzas_dominio::extra::TipoExtra;
+use finanzas_dominio::fondo::NivelEmergencia;
 use finanzas_dominio::gasto::{Categoria, Origen};
 
 pub const fn categoria(c: Categoria) -> &'static str {
@@ -77,10 +78,32 @@ pub fn a_tipo_extra(codigo: &str) -> Result<TipoExtra, ErrorRepositorio> {
     })
 }
 
+pub const fn nivel(n: NivelEmergencia) -> &'static str {
+    match n {
+        NivelEmergencia::Vital => "VITAL",
+        NivelEmergencia::Trabajo => "TRABAJO",
+        NivelEmergencia::Descuido => "DESCUIDO",
+        NivelEmergencia::Falta => "FALTA",
+    }
+}
+
+pub fn a_nivel(codigo: &str) -> Result<NivelEmergencia, ErrorRepositorio> {
+    Ok(match codigo {
+        "VITAL" => NivelEmergencia::Vital,
+        "TRABAJO" => NivelEmergencia::Trabajo,
+        "DESCUIDO" => NivelEmergencia::Descuido,
+        "FALTA" => NivelEmergencia::Falta,
+        otro => return Err(error(format!("nivel de emergencia desconocido: {otro}"))),
+    })
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{a_categoria, a_origen, a_tipo_extra, categoria, origen, tipo_extra};
+    use super::{
+        a_categoria, a_nivel, a_origen, a_tipo_extra, categoria, nivel, origen, tipo_extra,
+    };
     use finanzas_dominio::extra::TipoExtra;
+    use finanzas_dominio::fondo::NivelEmergencia;
     use finanzas_dominio::gasto::{Categoria, Origen};
 
     #[test]
@@ -116,13 +139,28 @@ mod tests {
         ] {
             assert_eq!(a_tipo_extra(tipo_extra(t)), Ok(t), "{t:?}");
         }
+        for n in [
+            NivelEmergencia::Vital,
+            NivelEmergencia::Trabajo,
+            NivelEmergencia::Descuido,
+            NivelEmergencia::Falta,
+        ] {
+            assert_eq!(a_nivel(nivel(n)), Ok(n), "{n:?}");
+        }
         assert!(a_categoria("comida").is_err(), "distingue mayúsculas");
     }
 
     #[test]
     fn los_codigos_coinciden_con_el_esquema() {
         let esquema = crate::ESQUEMA;
-        for codigo in ["TRAMITES", "CUENTA_GASTOS", "SOBRA_DEL_MES", "FERIADO"] {
+        for codigo in [
+            "TRAMITES",
+            "CUENTA_GASTOS",
+            "SOBRA_DEL_MES",
+            "FERIADO",
+            "DESCUIDO",
+            "REPOSICION",
+        ] {
             assert!(
                 esquema.contains(&format!("\"{codigo}\"")),
                 "el esquema no admite {codigo}"

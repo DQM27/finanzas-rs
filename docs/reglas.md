@@ -60,7 +60,11 @@ Estados: ✅ implementada y probada · 🕓 acordada, falta implementar.
 | F4 | Una a la vez: con una reposición pendiente no se saca otra, salvo lo vital. | `decidir_retiro` | ✅ |
 | F5 | No se saca más de lo que hay ni montos de cero. | `decidir_retiro` | ✅ |
 | F6 | La cuota mensual de reposición se redondea hacia arriba. | `decidir_retiro` | ✅ |
-| F7 | El recargo vuelve al fondo; nadie se lo queda. | — (lo aplicará el caso de uso de reposición) | 🕓 |
+| F7 | El recargo vuelve al fondo; nadie se lo queda: cada retiro se repone con su recargo. | `MovimientoFondo::reposicion`, `EstadoFondo::de` | ✅ |
+| F8 | El saldo no se guarda: sale de sumar aportes y reposiciones y restar retiros. | `EstadoFondo::de` | ✅ |
+| F9 | Las reposiciones pagan primero el retiro más viejo. | `EstadoFondo::de` | ✅ |
+| F10 | Sólo se repone si hay algo pendiente y nunca más de lo que falta; lo que sobre se anota como aporte. | `MovimientoFondo::reposicion` | ✅ |
+| F11 | Cuota del mes = la cuota de cada retiro no repuesto, sin pasarse de lo que le falta. | `EstadoFondo::de` | ✅ |
 
 ## Q · Quincena
 

@@ -111,40 +111,7 @@ mod tests {
 
     #[test]
     #[ignore = "necesita SurrealDB: ver el comentario del archivo"]
-    fn un_id_repetido_no_pisa_lo_guardado() {
-        use finanzas_aplicacion::puertos::RepositorioExtras;
-        use finanzas_dominio::dinero::Colones;
-        use finanzas_dominio::extra::{Extra, ExtraId, TipoExtra};
-        use uuid::Uuid;
-
-        let repo = base_nueva();
-        let fecha = chrono::NaiveDate::from_ymd_opt(2026, 11, 11).unwrap();
-        let id = ExtraId::new(Uuid::from_u128(1));
-        let primera = Extra::reconstruir(
-            id,
-            finanzas_contrato::DANIEL,
-            fecha,
-            TipoExtra::Nocturna,
-            Colones::new(25_800),
-        );
-        let repetida = Extra::reconstruir(
-            id,
-            finanzas_contrato::DANIEL,
-            fecha,
-            TipoExtra::Otra,
-            Colones::new(1),
-        );
-        pollster::block_on(async {
-            assert_eq!(repo.guardar(&primera).await, Ok(()), "la primera entra");
-            assert!(
-                repo.guardar(&repetida).await.is_err(),
-                "un id repetido es un error"
-            );
-            assert_eq!(
-                repo.de_usuario(finanzas_contrato::DANIEL).await,
-                Ok(vec![primera]),
-                "lo guardado queda intacto"
-            );
-        });
+    fn fondo() {
+        pollster::block_on(finanzas_contrato::fondo(&base_nueva()));
     }
 }

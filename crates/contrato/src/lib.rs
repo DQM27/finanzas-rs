@@ -18,12 +18,16 @@
 )]
 
 use chrono::NaiveDate;
-use finanzas_aplicacion::puertos::{RepositorioExtras, RepositorioGastos, RepositorioPerfiles};
+use finanzas_aplicacion::puertos::{
+    RepositorioExtras, RepositorioFondo, RepositorioGastos, RepositorioPerfiles,
+};
 use finanzas_dominio::caja_chica::CajaChica;
 use finanzas_dominio::calendario::{CalendarioCortes, Corte};
 use finanzas_dominio::dinero::Colones;
 use finanzas_dominio::extra::{Extra, ExtraId, TipoExtra};
+use finanzas_dominio::fondo::{NivelEmergencia, PlanReposicion};
 use finanzas_dominio::gasto::{Categoria, DatosGasto, Gasto, GastoId, Origen};
+use finanzas_dominio::movimientos_fondo::{Movimiento, MovimientoFondo, MovimientoFondoId};
 use finanzas_dominio::perfil::{Perfil, PerfilSalarial, TarifasExtra};
 use finanzas_dominio::proporcion::Proporcion;
 use finanzas_dominio::texto::Concepto;
@@ -177,6 +181,11 @@ pub async fn gastos<R: RepositorioGastos>(repo: &R) {
         Ok(vec![]),
         "un periodo sin gastos da una lista vacía"
     );
+    let pisador = gasto(1, DANIEL, f(2026, 11, 9), "OTRO CON EL MISMO ID", 1);
+    assert!(
+        repo.guardar(&pisador).await.is_err(),
+        "un id repetido es un error"
+    );
 
     let categorias = [
         Categoria::Comida,
@@ -233,12 +242,72 @@ pub async fn extras<R: RepositorioExtras>(repo: &R) {
     }
     assert_eq!(
         repo.de_usuario(DANIEL).await,
-        Ok(vec![otra, especial, once, catorce, diurna, feriado]),
+        Ok(vec![otra, especial, once.clone(), catorce, diurna, feriado]),
         "sólo las del usuario, todo tipo intacto, por fecha y luego por id"
+    );
+    let pisadora = extra(2, DANIEL, f(2026, 11, 11), TipoExtra::Otra, 1);
+    assert!(
+        repo.guardar(&pisadora).await.is_err(),
+        "un id repetido es un error"
     );
     assert_eq!(
         repo.de_usuario(OTRO).await,
         Ok(vec![ajena]),
         "el otro usuario ve sólo lo suyo"
+    );
+}
+
+fn movimiento(
+    n: u128,
+    usuario: UsuarioId,
+    fecha: NaiveDate,
+    monto: i64,
+    m: Movimiento,
+) -> MovimientoFondo {
+    MovimientoFondo::reconstruir(
+        MovimientoFondoId::new(Uuid::from_u128(n)),
+        usuario,
+        fecha,
+        Concepto::new("MOVIMIENTO").expect("concepto válido"),
+        Colones::new(monto),
+        m,
+    )
+}
+
+/// Contrato de [`RepositorioFondo`].
+pub async fn fondo<R: RepositorioFondo>(repo: &R) {
+    assert_eq!(
+        repo.de_usuario(DANIEL).await,
+        Ok(vec![]),
+        "sin movimientos, lista vacía"
+    );
+    let plan = PlanReposicion {
+        nivel: NivelEmergencia::Trabajo,
+        sacado: Colones::new(20_000),
+        a_reponer: Colones::new(21_000),
+        meses: 3,
+        cuota_mensual: Colones::new(7_000),
+    };
+    let reposicion = movimiento(3, DANIEL, f(2026, 11, 13), 7_000, Movimiento::Reposicion);
+    let retiro = movimiento(2, DANIEL, f(2026, 11, 10), 20_000, Movimiento::Retiro(plan));
+    let aporte = movimiento(1, DANIEL, f(2026, 11, 1), 31_619, Movimiento::Aporte);
+    let ajeno = movimiento(4, OTRO, f(2026, 11, 1), 5_000, Movimiento::Aporte);
+    for m in [&reposicion, &retiro, &aporte, &ajeno] {
+        assert_eq!(repo.guardar(m).await, Ok(()), "guarda {:?}", m.id());
+    }
+    assert_eq!(
+        repo.de_usuario(DANIEL).await,
+        Ok(vec![aporte, retiro, reposicion]),
+        "sólo los del usuario, por fecha, con el plan del retiro intacto"
+    );
+    assert_eq!(
+        repo.de_usuario(OTRO).await,
+        Ok(vec![ajeno]),
+        "el otro usuario ve sólo lo suyo"
+    );
+    let pisador = movimiento(1, DANIEL, f(2026, 11, 1), 1, Movimiento::Reposicion);
+    assert!(
+        repo.guardar(&pisador).await.is_err(),
+        "un id repetido es un error"
     );
 }

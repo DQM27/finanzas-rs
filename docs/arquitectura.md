@@ -174,8 +174,8 @@ En este orden:
 
 1. ~~`infra-surreal`~~: hecho (esquema, repositorios de perfil, gastos y extras,
    contrato compartido con `infra-memoria`).
-2. Casos de uso que faltan: quincena (marcar pagos), fondo (retiros y reposición),
-   cierre de mes, deshacer.
+2. Casos de uso que faltan: ~~fondo (consultar, sacar, reponer, aportar)~~ hecho;
+   quedan quincena (presupuesto y marcar pagos), cierre de mes y deshacer.
 3. `apps/worker`: API en Rust sobre Cloudflare Workers.
 4. `apps/web`: PWA en Angular, siguiendo el sistema visual de [`diseno.md`](diseno.md).
 5. Migración de los datos de la hoja.

@@ -25,6 +25,16 @@ pub fn mapa<const N: usize>(campos: [(&str, Value); N]) -> Value {
     )
 }
 
+/// Arma un mapa CBOR con una cantidad variable de campos.
+pub fn mapa_de(campos: Vec<(&str, Value)>) -> Value {
+    Value::Map(
+        campos
+            .into_iter()
+            .map(|(clave, valor)| (Value::Text(clave.to_owned()), valor))
+            .collect(),
+    )
+}
+
 pub fn texto(s: &str) -> Value {
     Value::Text(s.to_owned())
 }
@@ -99,6 +109,19 @@ impl<'a> Registro<'a> {
     pub fn uuid(self, nombre: &str) -> Result<Uuid, ErrorRepositorio> {
         let t = self.texto(nombre)?;
         Uuid::parse_str(t).map_err(|e| error(format!("`{nombre}` no es un UUID ({t}): {e}")))
+    }
+
+    /// Un subregistro que puede faltar (`NONE`).
+    pub fn registro_opcional(self, nombre: &str) -> Result<Option<Self>, ErrorRepositorio> {
+        match self
+            .0
+            .iter()
+            .find(|(clave, _)| matches!(clave, Value::Text(t) if t == nombre))
+        {
+            None => Ok(None),
+            Some((_, valor)) if es_vacio(valor) => Ok(None),
+            Some((_, valor)) => Self::de(valor).map(Some),
+        }
     }
 
     pub fn registro(self, nombre: &str) -> Result<Self, ErrorRepositorio> {

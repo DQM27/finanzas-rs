@@ -13,6 +13,7 @@ pub mod dinero;
 pub mod extra;
 pub mod fondo;
 pub mod gasto;
+pub mod movimientos_fondo;
 pub mod perfil;
 pub mod proporcion;
 pub mod quincena;

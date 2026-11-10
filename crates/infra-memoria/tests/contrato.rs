@@ -2,7 +2,9 @@
 
 #[cfg(test)]
 mod tests {
-    use finanzas_infra_memoria::{ExtrasEnMemoria, GastosEnMemoria, PerfilesEnMemoria};
+    use finanzas_infra_memoria::{
+        ExtrasEnMemoria, FondoEnMemoria, GastosEnMemoria, PerfilesEnMemoria,
+    };
 
     #[test]
     fn perfiles() {
@@ -17,5 +19,10 @@ mod tests {
     #[test]
     fn extras() {
         pollster::block_on(finanzas_contrato::extras(&ExtrasEnMemoria::default()));
+    }
+
+    #[test]
+    fn fondo() {
+        pollster::block_on(finanzas_contrato::fondo(&FondoEnMemoria::default()));
     }
 }
