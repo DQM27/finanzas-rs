@@ -51,6 +51,9 @@ pub enum ErrorFondo {
     /// No hay nada que reponer: lo que entra es un aporte.
     #[error("no hay nada pendiente de reponer; anotalo como aporte")]
     SinReposicionPendiente,
+    /// Sólo se puede deshacer el último movimiento (U2).
+    #[error("sólo se puede deshacer el último movimiento del fondo")]
+    SoloElUltimo,
     /// Se quiere reponer más de lo que falta.
     #[error("sólo faltan {por_reponer} por reponer; el resto es un aporte")]
     ReposicionDeMas {
@@ -268,9 +271,24 @@ impl EstadoFondo {
     }
 }
 
+/// Revisa que un movimiento se pueda deshacer: tiene que ser el último (U2).
+/// Si se borrara uno del medio, las reposiciones posteriores quedarían pagando
+/// un retiro que ya no existe y el estado cambiaría hacia atrás. Devuelve
+/// `None` si el movimiento no está en la lista.
+pub fn deshacible(
+    movimientos: &[MovimientoFondo],
+    id: MovimientoFondoId,
+) -> Option<Result<&MovimientoFondo, ErrorFondo>> {
+    let movimiento = movimientos.iter().find(|m| m.id == id)?;
+    Some(match movimientos.last() {
+        Some(ultimo) if ultimo.id == id => Ok(movimiento),
+        _ => Err(ErrorFondo::SoloElUltimo),
+    })
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{ErrorFondo, EstadoFondo, MovimientoFondo, MovimientoFondoId};
+    use super::{ErrorFondo, EstadoFondo, MovimientoFondo, MovimientoFondoId, deshacible};
     use crate::dinero::Colones;
     use crate::fondo::{Evaluacion, NivelEmergencia, RechazoRetiro, decidir_retiro};
     use crate::texto::Concepto;
@@ -445,5 +463,22 @@ mod tests {
             Err(ErrorFondo::MontoInvalido),
             "reposición negativa"
         );
+    }
+
+    #[test]
+    fn solo_se_deshace_el_ultimo_movimiento() {
+        let mut movs = base();
+        sacar(&mut movs, 2, 20_000, NivelEmergencia::Trabajo).unwrap();
+        reponer(&mut movs, 3, 7_000).unwrap();
+        assert_eq!(
+            deshacible(&movs, id(2)),
+            Some(Err(ErrorFondo::SoloElUltimo)),
+            "el retiro ya tiene una reposición encima"
+        );
+        assert!(
+            matches!(deshacible(&movs, id(3)), Some(Ok(m)) if m.id() == id(3)),
+            "la reposición es lo último"
+        );
+        assert_eq!(deshacible(&movs, id(99)), None, "no existe");
     }
 }

@@ -175,7 +175,7 @@ pub async fn gastos<R: RepositorioGastos>(repo: &R) {
 
     assert_eq!(
         repo.entre(DANIEL, f(2026, 11, 1), f(2026, 11, 12)).await,
-        Ok(vec![pasajes, jugo, raro]),
+        Ok(vec![pasajes.clone(), jugo.clone(), raro]),
         "filtra por usuario y por fechas incluidas, ordena por fecha y luego por id"
     );
     assert_eq!(
@@ -187,6 +187,26 @@ pub async fn gastos<R: RepositorioGastos>(repo: &R) {
     assert!(
         repo.guardar(&pisador).await.is_err(),
         "un id repetido es un error"
+    );
+    assert_eq!(
+        repo.borrar(OTRO, jugo.id()).await,
+        Ok(false),
+        "nadie borra lo de otro"
+    );
+    assert_eq!(
+        repo.borrar(DANIEL, jugo.id()).await,
+        Ok(true),
+        "borra lo propio"
+    );
+    assert_eq!(
+        repo.borrar(DANIEL, jugo.id()).await,
+        Ok(false),
+        "lo que ya no existe no se borra dos veces"
+    );
+    assert_eq!(
+        repo.entre(DANIEL, f(2026, 11, 9), f(2026, 11, 9)).await,
+        Ok(vec![pasajes.clone()]),
+        "el jugo ya no está; los pasajes sí"
     );
 
     let categorias = [
@@ -253,9 +273,26 @@ pub async fn extras<R: RepositorioExtras>(repo: &R) {
         "un id repetido es un error"
     );
     assert_eq!(
+        repo.borrar(DANIEL, ajena.id()).await,
+        Ok(false),
+        "nadie borra lo de otro"
+    );
+    assert_eq!(
+        repo.borrar(DANIEL, once.id()).await,
+        Ok(true),
+        "borra lo propio"
+    );
+    assert_eq!(
+        repo.de_usuario(DANIEL)
+            .await
+            .map(|lista| lista.iter().any(|e| e.id() == once.id())),
+        Ok(false),
+        "la extra borrada ya no está"
+    );
+    assert_eq!(
         repo.de_usuario(OTRO).await,
         Ok(vec![ajena]),
-        "el otro usuario ve sólo lo suyo"
+        "el otro usuario ve sólo lo suyo y no perdió nada"
     );
 }
 
@@ -299,7 +336,7 @@ pub async fn fondo<R: RepositorioFondo>(repo: &R) {
     }
     assert_eq!(
         repo.de_usuario(DANIEL).await,
-        Ok(vec![aporte, retiro, reposicion]),
+        Ok(vec![aporte.clone(), retiro.clone(), reposicion.clone()]),
         "sólo los del usuario, por fecha, con el plan del retiro intacto"
     );
     assert_eq!(
@@ -311,6 +348,21 @@ pub async fn fondo<R: RepositorioFondo>(repo: &R) {
     assert!(
         repo.guardar(&pisador).await.is_err(),
         "un id repetido es un error"
+    );
+    assert_eq!(
+        repo.borrar(OTRO, reposicion.id()).await,
+        Ok(false),
+        "nadie borra lo de otro"
+    );
+    assert_eq!(
+        repo.borrar(DANIEL, reposicion.id()).await,
+        Ok(true),
+        "borra lo propio"
+    );
+    assert_eq!(
+        repo.de_usuario(DANIEL).await,
+        Ok(vec![aporte, retiro]),
+        "la reposición ya no está"
     );
 }
 

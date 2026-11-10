@@ -29,6 +29,9 @@ pub enum ErrorAplicacion {
     /// Todavía no hay presupuesto para esa quincena.
     #[error("no hay presupuesto para la quincena del {0}")]
     QuincenaNoEncontrada(NaiveDate),
+    /// No hay nada con ese id para ese usuario.
+    #[error("no se encontró lo que se quería deshacer")]
+    NoEncontrado,
     /// La quincena no es válida.
     #[error(transparent)]
     Quincena(#[from] ErrorQuincena),

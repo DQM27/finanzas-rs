@@ -10,9 +10,9 @@ use finanzas_aplicacion::puertos::{
     GeneradorIds, Reloj, RepositorioExtras, RepositorioFondo, RepositorioGastos,
     RepositorioPerfiles, RepositorioQuincenas,
 };
-use finanzas_dominio::extra::Extra;
-use finanzas_dominio::gasto::Gasto;
-use finanzas_dominio::movimientos_fondo::MovimientoFondo;
+use finanzas_dominio::extra::{Extra, ExtraId};
+use finanzas_dominio::gasto::{Gasto, GastoId};
+use finanzas_dominio::movimientos_fondo::{MovimientoFondo, MovimientoFondoId};
 use finanzas_dominio::perfil::Perfil;
 use finanzas_dominio::quincena::Quincena;
 use finanzas_dominio::usuario::UsuarioId;
@@ -42,6 +42,14 @@ fn insertar<T: Clone, K: PartialEq + std::fmt::Debug>(
     lista.push(nuevo.clone());
     drop(lista);
     Ok(())
+}
+
+/// Quita el registro que cumpla `es_este`. `true` si había uno.
+fn quitar<T>(m: &Mutex<Vec<T>>, es_este: impl Fn(&T) -> bool) -> bool {
+    let mut lista = cerrojo(m);
+    let antes = lista.len();
+    lista.retain(|x| !es_este(x));
+    antes != lista.len()
 }
 
 /// Un reloj que siempre dice la misma fecha.
@@ -114,6 +122,10 @@ impl RepositorioGastos for GastosEnMemoria {
         gastos.sort_by_key(|g| (g.fecha(), g.id()));
         Ok(gastos)
     }
+
+    async fn borrar(&self, usuario: UsuarioId, id: GastoId) -> Result<bool, ErrorRepositorio> {
+        Ok(quitar(&self.0, |g| g.usuario() == usuario && g.id() == id))
+    }
 }
 
 /// Extras en memoria.
@@ -133,6 +145,10 @@ impl RepositorioExtras for ExtrasEnMemoria {
             .collect();
         extras.sort_by_key(|e| (e.fecha(), e.id()));
         Ok(extras)
+    }
+
+    async fn borrar(&self, usuario: UsuarioId, id: ExtraId) -> Result<bool, ErrorRepositorio> {
+        Ok(quitar(&self.0, |e| e.usuario() == usuario && e.id() == id))
     }
 }
 
@@ -156,6 +172,14 @@ impl RepositorioFondo for FondoEnMemoria {
             .collect();
         movimientos.sort_by_key(|m| (m.fecha(), m.id()));
         Ok(movimientos)
+    }
+
+    async fn borrar(
+        &self,
+        usuario: UsuarioId,
+        id: MovimientoFondoId,
+    ) -> Result<bool, ErrorRepositorio> {
+        Ok(quitar(&self.0, |m| m.usuario() == usuario && m.id() == id))
     }
 }
 

@@ -6,9 +6,9 @@
 
 use crate::errores::ErrorRepositorio;
 use chrono::NaiveDate;
-use finanzas_dominio::extra::Extra;
-use finanzas_dominio::gasto::Gasto;
-use finanzas_dominio::movimientos_fondo::MovimientoFondo;
+use finanzas_dominio::extra::{Extra, ExtraId};
+use finanzas_dominio::gasto::{Gasto, GastoId};
+use finanzas_dominio::movimientos_fondo::{MovimientoFondo, MovimientoFondoId};
 use finanzas_dominio::perfil::Perfil;
 use finanzas_dominio::quincena::Quincena;
 use finanzas_dominio::usuario::UsuarioId;
@@ -54,6 +54,8 @@ pub trait RepositorioGastos {
         desde: NaiveDate,
         hasta: NaiveDate,
     ) -> Result<Vec<Gasto>, ErrorRepositorio>;
+    /// Borra un gasto del usuario. `false` si no existe o es de otro.
+    async fn borrar(&self, usuario: UsuarioId, id: GastoId) -> Result<bool, ErrorRepositorio>;
 }
 
 /// Las extras trabajadas.
@@ -67,6 +69,8 @@ pub trait RepositorioExtras {
     /// Todas las extras de un usuario, ordenadas por fecha y, el mismo día,
     /// por identificador.
     async fn de_usuario(&self, usuario: UsuarioId) -> Result<Vec<Extra>, ErrorRepositorio>;
+    /// Borra una extra del usuario. `false` si no existe o es de otro.
+    async fn borrar(&self, usuario: UsuarioId, id: ExtraId) -> Result<bool, ErrorRepositorio>;
 }
 
 /// Los movimientos del fondo de emergencia.
@@ -83,6 +87,12 @@ pub trait RepositorioFondo {
         &self,
         usuario: UsuarioId,
     ) -> Result<Vec<MovimientoFondo>, ErrorRepositorio>;
+    /// Borra un movimiento del usuario. `false` si no existe o es de otro.
+    async fn borrar(
+        &self,
+        usuario: UsuarioId,
+        id: MovimientoFondoId,
+    ) -> Result<bool, ErrorRepositorio>;
 }
 
 /// El presupuesto de cada quincena.

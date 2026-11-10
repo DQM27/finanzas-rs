@@ -40,6 +40,27 @@ impl<H: EnvioHttp> Surreal<H> {
         &self.cliente
     }
 
+    /// Borra un registro de una tabla sólo si es del usuario. `true` si
+    /// borró algo.
+    async fn borrar_de(
+        &self,
+        tabla: &str,
+        dueno: UsuarioId,
+        id: uuid::Uuid,
+    ) -> Result<bool, ErrorRepositorio> {
+        let filas = self
+            .seleccionar(
+                BORRAR,
+                [
+                    ("tabla", cbor::texto(tabla)),
+                    ("id", cbor::uuid(id)),
+                    ("usuario", usuario(dueno)),
+                ],
+            )
+            .await?;
+        Ok(!filas.is_empty())
+    }
+
     /// Corre una consulta cuya última sentencia es un `SELECT` y devuelve sus
     /// filas.
     async fn seleccionar<const N: usize>(
@@ -54,6 +75,9 @@ impl<H: EnvioHttp> Surreal<H> {
         Ok(filas(ultimo)?.to_vec())
     }
 }
+
+/// Borra un registro por id sólo si es del usuario (U1); devuelve lo borrado.
+const BORRAR: &str = "DELETE type::record($tabla, $id) WHERE usuario = $usuario RETURN BEFORE;";
 
 /// Convierte un error de validación del dominio: un dato guardado que ya no es
 /// válido es un problema del almacenamiento, no del usuario.
@@ -245,6 +269,10 @@ impl<H: EnvioHttp> RepositorioGastos for Surreal<H> {
         .map(gasto_de_cbor)
         .collect()
     }
+
+    async fn borrar(&self, dueno: UsuarioId, id: GastoId) -> Result<bool, ErrorRepositorio> {
+        self.borrar_de("gasto", dueno, id.uuid()).await
+    }
 }
 
 // ------------------------------------------------------------------ extras
@@ -292,6 +320,10 @@ impl<H: EnvioHttp> RepositorioExtras for Surreal<H> {
             .iter()
             .map(extra_de_cbor)
             .collect()
+    }
+
+    async fn borrar(&self, dueno: UsuarioId, id: ExtraId) -> Result<bool, ErrorRepositorio> {
+        self.borrar_de("extra", dueno, id.uuid()).await
     }
 }
 
@@ -386,6 +418,14 @@ impl<H: EnvioHttp> RepositorioFondo for Surreal<H> {
             .iter()
             .map(movimiento_de_cbor)
             .collect()
+    }
+
+    async fn borrar(
+        &self,
+        dueno: UsuarioId,
+        id: MovimientoFondoId,
+    ) -> Result<bool, ErrorRepositorio> {
+        self.borrar_de("movimiento_fondo", dueno, id.uuid()).await
     }
 }
 

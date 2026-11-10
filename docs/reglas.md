@@ -83,3 +83,10 @@ Estados: ✅ implementada y probada · 🕓 acordada, falta implementar.
 |---|---|---|---|
 | G1 | Un gasto tiene monto mayor que cero. | `Gasto::new` | ✅ |
 | G2 | El concepto se guarda sin espacios sobrantes, en mayúscula y con 80 caracteres como máximo. | `texto::Concepto` | ✅ |
+
+## U · Deshacer
+
+| Código | Regla | Dónde | Estado |
+|---|---|---|---|
+| U1 | Sólo se deshace lo propio: un id de otro usuario es como si no existiera. | `Deshacer`, repositorios (`borrar` filtra por usuario) | ✅ |
+| U2 | En el fondo sólo se deshace el último movimiento; si no, las reposiciones posteriores quedarían pagando un retiro que ya no existe. | `movimientos_fondo::deshacible` | ✅ |
