@@ -89,7 +89,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: >-
           cargo build --locked --target wasm32-unknown-unknown
-          -p finanzas-dominio -p finanzas-aplicacion -p finanzas-infra-surreal
+          -p finanzas-dominio -p finanzas-aplicacion -p finanzas-infra-surreal -p finanzas-api
 
   documentacion:
     name: Documentación (rustdoc sin avisos)

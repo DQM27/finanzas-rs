@@ -78,7 +78,8 @@ flowchart TB
 | `infra-surreal` | Puertos sobre SurrealDB (RPC en CBOR por HTTP) | `aplicacion`, `dominio`, `ciborium`, `base64` |
 | `contrato` | Pruebas de contrato que cumple todo adaptador | `aplicacion`, `dominio` (sólo como dependencia de pruebas) |
 | `composicion` *(siguiente)* | Arma los casos de uso con sus adaptadores | todos los de arriba |
-| `apps/worker` *(siguiente)* | API en un Worker de Cloudflare (Rust → WASM) | `composicion` |
+| `api` | API HTTP: rutas, JSON y errores, sin runtime; el usuario llega autenticado | `aplicacion`, `dominio`, `serde` |
+| `apps/worker` *(siguiente)* | Worker de Cloudflare: traduce `Request` a `api`, autentica y pone `fetch` y SurrealDB | `api`, `infra-surreal`, `worker` |
 | `apps/web` *(siguiente)* | PWA en Angular; usa el dominio compilado a WASM para validar sin red | `dominio` vía WASM |
 
 La pureza del dominio la vigila `crates/dominio/tests/arquitectura.rs`: falla si el
@@ -122,6 +123,15 @@ El esquema (`crates/infra-surreal/src/esquema.surql`) se puede aplicar las veces
 haga falta (`OVERWRITE`). Fechas como texto `AAAA-MM-DD`, dinero en enteros, enumerados
 con códigos en MAYÚSCULA validados con `ASSERT`, y el id del registro igual al UUID del
 dominio (en `perfil`, el del usuario).
+
+### La API no sabe que corre en un Worker
+
+`crates/api` recibe una petición ya separada (método, ruta, cuerpo) y un `Contexto` con
+los puertos, y devuelve estado y JSON. Las rutas están en la documentación del crate.
+Cada error lleva un código estable (`DATOS_INVALIDOS`, `RETIRO_RECHAZADO`,
+`SIN_PRESUPUESTO`…) y un mensaje para mostrar. Un error interno nunca manda su detalle
+al cliente: lo devuelve aparte para el registro del servidor. Los JSON rechazan campos
+desconocidos. Toda la API se prueba en nativo con los adaptadores en memoria.
 
 ### Pruebas de contrato
 
@@ -179,6 +189,9 @@ En este orden:
 2. Casos de uso que faltan: ~~fondo~~, ~~quincena~~ y ~~deshacer~~ hechos. Queda el
    cierre: hay una propuesta en [`propuesta-cierre.md`](propuesta-cierre.md) que espera la
    aprobación de Daniel. **No se implementa sin esa aprobación.**
-3. `apps/worker`: API en Rust sobre Cloudflare Workers.
+3. ~~`api`~~ hecho. Falta `apps/worker`: el Worker de Cloudflare que traduce sus
+   peticiones a `api`, pone el `fetch` como `EnvioHttp` y autentica a la persona. La
+   autenticación está por decidir; la recomendada es Cloudflare Access (correo
+   verificado → `UsuarioId`), sin manejar claves propias.
 4. `apps/web`: PWA en Angular, siguiendo el sistema visual de [`diseno.md`](diseno.md).
 5. Migración de los datos de la hoja.
