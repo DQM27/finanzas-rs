@@ -7,6 +7,8 @@ Documentos relacionados:
 
 - [`reglas.md`](reglas.md): catálogo de reglas de negocio con su código y estado.
 - [`diseno.md`](diseno.md): sistema visual de la interfaz.
+- [`propuesta-cierre.md`](propuesta-cierre.md): propuesta (sin aprobar) del cierre de
+  quincena.
 - [`../AGENTS.md`](../AGENTS.md): preferencias del usuario y reglas de trabajo.
 
 ---
@@ -174,8 +176,9 @@ En este orden:
 
 1. ~~`infra-surreal`~~: hecho (esquema, repositorios de perfil, gastos y extras,
    contrato compartido con `infra-memoria`).
-2. Casos de uso que faltan: ~~fondo~~, ~~quincena~~ y ~~deshacer~~ hechos; queda el
-   cierre de mes, que espera que se definan sus reglas.
+2. Casos de uso que faltan: ~~fondo~~, ~~quincena~~ y ~~deshacer~~ hechos. Queda el
+   cierre: hay una propuesta en [`propuesta-cierre.md`](propuesta-cierre.md) que espera la
+   aprobación de Daniel. **No se implementa sin esa aprobación.**
 3. `apps/worker`: API en Rust sobre Cloudflare Workers.
 4. `apps/web`: PWA en Angular, siguiendo el sistema visual de [`diseno.md`](diseno.md).
 5. Migración de los datos de la hoja.
