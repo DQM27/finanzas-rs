@@ -77,7 +77,7 @@ Estados: ✅ implementada y probada · 🕓 acordada, falta implementar.
 | Q3 | Ningún monto presupuestado es negativo. | `Linea::new` | ✅ |
 | Q4 | Rehacer el presupuesto no borra lo marcado: una línea nueva hereda la marca de la anterior del mismo lado y concepto (en orden si se repite). | `Quincena::con_presupuesto` | ✅ |
 | Q5 | Cada quincena es de un usuario y de un día de pago de su calendario; un día que no es de pago no lleva presupuesto. | `CalendarioCortes::es_dia_de_pago` | ✅ |
-| Q6 | La quincena en curso es la del último pago recibido (C4). | `CalendarioCortes::ultimo_pago` | ✅ |
+| Q6 | La quincena en curso es la del último pago recibido (C4). | `CalendarioCortes::ultimo_pago`, API `/cortes/hoy` | ✅ |
 
 ## G · Gastos puntuales
 

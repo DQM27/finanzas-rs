@@ -567,6 +567,10 @@ mod tests {
         assert_eq!(estado, 200, "{c}");
         assert_eq!(c["en_curso"]["inicio"], "2026-11-02", "corte de hoy");
         assert_eq!(c["en_curso"]["reportar_antes"], "2026-11-17", "reportar");
+        assert_eq!(
+            c["ultimo_pago"]["pago"], "2026-11-13",
+            "se gasta el pago del 13 (Q6)"
+        );
         assert_eq!(c["proximo_pago"]["pago"], "2026-11-30", "próximo pago");
         assert_eq!(c["dias_para_pago"], 15, "días que faltan");
 
@@ -575,6 +579,10 @@ mod tests {
         let (_, c) = pedir(&m, DANIEL, Metodo::Get, "/cortes/hoy", None);
         assert_eq!(c["proximo_pago"]["pago"], "2026-11-13", "hoy pagan");
         assert_eq!(c["dias_para_pago"], 0, "es hoy");
+        assert_eq!(
+            c["ultimo_pago"]["pago"], "2026-11-13",
+            "el de hoy ya cuenta como recibido"
+        );
 
         // Fuera del calendario: nada en curso ni por cobrar.
         m.reloj = RelojFijo(NaiveDate::from_ymd_opt(2027, 1, 10).unwrap());
@@ -582,8 +590,13 @@ mod tests {
         assert_eq!(estado, 200, "{c}");
         assert_eq!(
             c,
-            json!({ "en_curso": null, "proximo_pago": null, "dias_para_pago": null }),
-            "el calendario no cubre esa fecha"
+            json!({ "en_curso": null, "ultimo_pago": {
+                    "inicio": "2026-11-02",
+                    "fin": "2026-11-16",
+                    "reportar_antes": "2026-11-17",
+                    "pago": "2026-11-30"
+                }, "proximo_pago": null, "dias_para_pago": null }),
+            "fuera del calendario: queda el último pago, nada en curso ni por cobrar"
         );
 
         let (estado, r) = pedir(&m, DANIEL, Metodo::Post, "/cortes/hoy", None);

@@ -1,9 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { hoy } from '../nucleo/formato';
+import { hoy, leerMonto } from '../nucleo/formato';
 import { Avisos } from '../ui/aviso';
-import { Anotar, leerMonto } from './anotar';
+import { Anotar } from './anotar';
 
 describe('leerMonto', () => {
   it('se queda con los dígitos, como colones enteros', () => {

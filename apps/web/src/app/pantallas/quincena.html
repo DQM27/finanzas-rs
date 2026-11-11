@@ -1,0 +1,112 @@
+<main class="pantalla" data-seccion="quincena">
+  <h1>Quincena</h1>
+
+  @let k = cortes();
+  @if (k.estado === 'falla') {
+    <fz-tarjeta clave="Quincena" [tenida]="true" tono="error">
+      <p class="falla" role="alert">{{ k.mensaje }}</p>
+    </fz-tarjeta>
+  } @else if (k.estado === 'listo' && opciones().length === 0) {
+    <fz-tarjeta clave="Quincena" [tenida]="true" tono="error"
+                nota="El calendario de cortes no tiene una quincena para hoy. Hay que cargar los cortes nuevos." />
+  } @else {
+    @if (opciones().length > 1 && pago(); as elegido) {
+      <fz-segmentado class="cual" etiqueta="Qué quincena" [segmentos]="opciones()"
+                     [valor]="elegido" (valorChange)="abrir($event)" />
+    }
+
+    @let q = quincena();
+    @if (editando()) {
+      <!-- Editor del presupuesto -->
+      <form (ngSubmit)="guardar()">
+        @if (pago(); as p) {
+          <p class="subtitulo">Presupuesto del pago del {{ p | fechaCorta }}</p>
+        }
+        @for (lista of listas; track lista) {
+          <fz-grupo [titulo]="lista === 'ingresos' ? 'Ingresos' : 'Pagos'">
+            @for (f of (lista === 'ingresos' ? ingresos() : pagos()); track $index; let i = $index) {
+              <fz-renglon>
+                <input class="campo concepto" [attr.aria-label]="'Concepto ' + (i + 1)"
+                       placeholder="Concepto" autocomplete="off" maxlength="80"
+                       [value]="f.concepto" (input)="cambiar(lista, i, 'concepto', $any($event.target).value)" />
+                <input slot="valor" class="campo monto cifras" inputmode="numeric" placeholder="₡"
+                       autocomplete="off" [attr.aria-label]="'Monto de ' + (f.concepto || 'la línea ' + (i + 1))"
+                       [value]="f.monto" (input)="cambiar(lista, i, 'monto', $any($event.target).value)" />
+                <button slot="valor" type="button" class="quitar"
+                        [attr.aria-label]="'Quitar ' + (f.concepto || 'la línea ' + (i + 1))"
+                        (click)="quitar(lista, i)">
+                  <fz-icono nombre="quitar" />
+                </button>
+              </fz-renglon>
+            }
+            <fz-renglon [interactivo]="true" (click)="agregar(lista)">
+              <span class="agregar">+ Agregar {{ lista === 'ingresos' ? 'ingreso' : 'pago' }}</span>
+            </fz-renglon>
+          </fz-grupo>
+        }
+        @if (falla(); as mensaje) {
+          <p class="falla nota-error" role="alert">{{ mensaje }}</p>
+        }
+        <div class="acciones">
+          <button fz-boton type="submit" [guardando]="guardando()">Guardar presupuesto</button>
+          @if (!sinPresupuesto()) {
+            <button type="button" class="secundario" (click)="cancelar()">Cancelar</button>
+          }
+        </div>
+      </form>
+    } @else if (q.estado === 'cargando') {
+      <div class="pila">
+        <fz-esqueleto alto="calc(var(--alto-renglon) * 2)" />
+        <fz-esqueleto alto="calc(var(--alto-renglon) * 3)" />
+      </div>
+    } @else if (q.estado === 'falla') {
+      @if (!sinPresupuesto()) {
+        <fz-tarjeta clave="Quincena" [tenida]="true" tono="error">
+          <p class="falla" role="alert">{{ q.mensaje }}</p>
+        </fz-tarjeta>
+      }
+    } @else {
+      <!-- La quincena con su presupuesto -->
+      <fz-tarjeta class="resumen" [clave]="(q.valor.sobra < 0 ? 'Va a faltar' : 'Sobra') + ' · pago del ' + (q.valor.pago | fechaCorta)"
+                  [monto]="q.valor.sobra" [tenida]="q.valor.sobra < 0" tono="error">
+        <p class="detalle cifras">
+          Ingresos {{ q.valor.total_ingresos | colones }} · Pagos {{ q.valor.total_pagos | colones }}
+        </p>
+        @if (q.valor.falta_por_pagar > 0) {
+          <p class="detalle cifras">Falta pagar {{ q.valor.falta_por_pagar | colones }}</p>
+        }
+      </fz-tarjeta>
+
+      @for (bloque of [
+        { lado: 'PAGO', titulo: 'Pagos · ' + q.valor.avance.hechos + ' de ' + q.valor.avance.total, lineas: q.valor.pagos },
+        { lado: 'INGRESO', titulo: 'Ingresos', lineas: q.valor.ingresos }
+      ]; track bloque.lado) {
+        @if (bloque.lineas.length) {
+          <fz-grupo [titulo]="bloque.titulo">
+            @for (l of bloque.lineas; track $index; let i = $index) {
+              <fz-renglon [conIcono]="true" [class.hecho]="l.hecho">
+                <button slot="icono" type="button" class="marca" role="checkbox"
+                        [attr.aria-checked]="l.hecho" [attr.aria-label]="l.concepto"
+                        [disabled]="marcando() === bloque.lado + '-' + i"
+                        (click)="marcar($any(bloque.lado), i, l)">
+                  <span class="circulo">
+                    @if (l.hecho) {
+                      <fz-icono nombre="check" />
+                    }
+                  </span>
+                </button>
+                <span class="linea-1 concepto-linea">{{ l.concepto }}</span>
+                <span slot="valor" class="cifras monto-linea"
+                      [class.pendiente]="bloque.lado === 'PAGO' && !l.hecho">
+                  {{ l.monto | colones }}
+                </span>
+              </fz-renglon>
+            }
+          </fz-grupo>
+        }
+      }
+
+      <button type="button" class="secundario" (click)="editar(q.valor)">Editar presupuesto</button>
+    }
+  }
+</main>

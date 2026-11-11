@@ -550,6 +550,8 @@ impl From<&Corte> for CorteDto {
 pub struct CortesHoyDto {
     /// El corte en que cae hoy: lo trabajado hoy se reporta y se paga según él.
     pub en_curso: Option<CorteDto>,
+    /// El último pago recibido, hoy incluido: la quincena que se está gastando.
+    pub ultimo_pago: Option<CorteDto>,
     /// El próximo pago, hoy incluido.
     pub proximo_pago: Option<CorteDto>,
     /// Días hasta ese pago (0 si es hoy).
@@ -560,6 +562,7 @@ impl From<CortesHoy> for CortesHoyDto {
     fn from(c: CortesHoy) -> Self {
         Self {
             en_curso: c.en_curso.as_ref().map(CorteDto::from),
+            ultimo_pago: c.ultimo_pago.as_ref().map(CorteDto::from),
             proximo_pago: c.proximo_pago.as_ref().map(CorteDto::from),
             dias_para_pago: c.dias_para_pago,
         }

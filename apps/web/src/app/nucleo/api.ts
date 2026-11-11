@@ -113,6 +113,8 @@ export interface Perfil {
 export interface CortesHoy {
   /** El corte en que cae hoy: lo trabajado hoy se reporta y se paga según él. */
   en_curso: Corte | null;
+  /** El último pago recibido, hoy incluido: la quincena que se está gastando. */
+  ultimo_pago: Corte | null;
   /** El próximo pago, hoy incluido. */
   proximo_pago: Corte | null;
   /** Días hasta ese pago (0 si es hoy). */

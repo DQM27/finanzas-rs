@@ -9,8 +9,7 @@ export const routes: Routes = [
   {
     path: 'quincena',
     title: 'Quincena · Finanzas',
-    loadComponent: () => import('./pantallas/pronto').then((m) => m.Pronto),
-    data: { titulo: 'Quincena' },
+    loadComponent: () => import('./pantallas/quincena').then((m) => m.Quincena),
   },
   {
     path: 'anotar',

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import type { Categoria, Origen, TipoExtra } from '../nucleo/api';
 import { CATEGORIAS, ORIGENES, TIPOS_EXTRA } from '../nucleo/etiquetas';
 import { FallaApi, Finanzas } from '../nucleo/finanzas';
-import { colones, fechaCorta, hoy } from '../nucleo/formato';
+import { colones, fechaCorta, hoy, leerMonto } from '../nucleo/formato';
 import { Avisos } from '../ui/aviso';
 import { Boton } from '../ui/boton';
 import { Grupo } from '../ui/grupo';
@@ -13,12 +13,6 @@ import { Renglon } from '../ui/renglon';
 import { Segmentado, Segmento } from '../ui/segmentado';
 
 type Que = 'gasto' | 'extra';
-
-/** Sólo los dígitos de lo que se escribió, como colones enteros. Vacío es `null`. */
-export function leerMonto(texto: string): number | null {
-  const digitos = texto.replace(/\D/g, '');
-  return digitos ? Number(digitos) : null;
-}
 
 /**
  * Anotar un gasto o una extra. Lo que se escribe va tal cual a la API: el

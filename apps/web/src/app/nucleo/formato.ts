@@ -9,6 +9,12 @@ export function colones(monto: number): string {
   return `${signo}₡${Math.abs(Math.round(monto)).toLocaleString('en-US')}`;
 }
 
+/** Sólo los dígitos de lo que se escribió, como colones enteros. Vacío es `null`. */
+export function leerMonto(texto: string): number | null {
+  const digitos = texto.replace(/\D/g, '');
+  return digitos ? Number(digitos) : null;
+}
+
 @Pipe({ name: 'colones' })
 export class ColonesPipe implements PipeTransform {
   transform(monto: number | null | undefined): string {
