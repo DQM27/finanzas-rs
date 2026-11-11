@@ -14,7 +14,7 @@ use finanzas_dominio::dinero::Colones;
 use finanzas_dominio::extra::TipoExtra;
 use finanzas_dominio::fondo::{NivelEmergencia, PlanReposicion};
 use finanzas_dominio::gasto::{Categoria, Gasto, Origen};
-use finanzas_dominio::movimientos_fondo::EstadoFondo;
+use finanzas_dominio::movimientos_fondo::{EstadoFondo, Movimiento, MovimientoFondo};
 use finanzas_dominio::quincena::{Lado, Linea};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -598,6 +598,45 @@ impl From<ResumenPerfil> for PerfilDto {
                 })
                 .collect(),
             cubre_hasta: r.cubre_hasta,
+        }
+    }
+}
+
+/// Un movimiento del fondo de emergencia.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct MovimientoFondoDto {
+    pub id: Uuid,
+    pub fecha: NaiveDate,
+    pub concepto: String,
+    pub monto: i64,
+    pub tipo: DepositoOMovimientoDto,
+    /// Sólo en los retiros.
+    pub plan: Option<PlanDto>,
+}
+
+/// Clase de movimiento del fondo.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum DepositoOMovimientoDto {
+    Aporte,
+    Retiro,
+    Reposicion,
+}
+
+impl From<&MovimientoFondo> for MovimientoFondoDto {
+    fn from(m: &MovimientoFondo) -> Self {
+        let (tipo, plan) = match m.movimiento() {
+            Movimiento::Aporte => (DepositoOMovimientoDto::Aporte, None),
+            Movimiento::Reposicion => (DepositoOMovimientoDto::Reposicion, None),
+            Movimiento::Retiro(plan) => (DepositoOMovimientoDto::Retiro, Some(plan.into())),
+        };
+        Self {
+            id: m.id().uuid(),
+            fecha: m.fecha(),
+            concepto: m.concepto().como_str().to_owned(),
+            monto: m.monto().valor(),
+            tipo,
+            plan,
         }
     }
 }

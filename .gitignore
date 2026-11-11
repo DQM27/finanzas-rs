@@ -8,3 +8,7 @@ node_modules/
 
 # Historial de `surreal sql`: puede contener claves.
 history.txt
+
+# Angular
+apps/web/.angular/
+apps/web/dist/

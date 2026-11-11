@@ -1,0 +1,37 @@
+@use 'styles/tokens';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: var(--cuerpo);
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+// Montos y cifras alineados en columna.
+.cifras {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

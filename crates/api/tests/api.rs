@@ -488,4 +488,74 @@ mod tests {
         let (_, suyo) = pedir(&m, OTRO, Metodo::Get, "/perfil", None);
         assert_eq!(suyo["salario_base"], 400_000, "el del otro");
     }
+
+    #[test]
+    fn las_listas_para_la_interfaz() {
+        let m = mundo();
+        pedir(
+            &m,
+            DANIEL,
+            Metodo::Post,
+            "/gastos",
+            Some(json!({
+                "fecha": "2026-11-09", "concepto": "jugo nieto", "monto": 2_950,
+                "categoria": "FAMILIA", "origen": "CUENTA_GASTOS"
+            })),
+        );
+        pedir(
+            &m,
+            DANIEL,
+            Metodo::Post,
+            "/extras",
+            Some(json!({ "fecha": "2026-11-14", "tipo": "NOCTURNA" })),
+        );
+        pedir(
+            &m,
+            DANIEL,
+            Metodo::Post,
+            "/fondo/depositos",
+            Some(json!({ "tipo": "APORTE", "concepto": "inicial", "monto": 31_619 })),
+        );
+
+        let (estado, gastos) = pedir(
+            &m,
+            DANIEL,
+            Metodo::Get,
+            "/gastos/2026-11-01/2026-11-12",
+            None,
+        );
+        assert_eq!(estado, 200, "{gastos}");
+        assert_eq!(gastos[0]["concepto"], "JUGO NIETO", "gasto listado");
+        assert_eq!(gastos.as_array().unwrap().len(), 1, "sólo los del rango");
+
+        let (estado, extras) = pedir(&m, DANIEL, Metodo::Get, "/extras", None);
+        assert_eq!(estado, 200, "{extras}");
+        assert_eq!(extras[0]["neto"], 22_232, "neto calculado por el dominio");
+        // En el calendario del perfil de prueba, el corte del pago del 30
+        // llega hasta el 16/11, así que la extra del 14 cae ahí.
+        assert_eq!(
+            extras[0]["fecha_pago"], "2026-11-30",
+            "pago del corte que la contiene"
+        );
+
+        let (estado, movs) = pedir(&m, DANIEL, Metodo::Get, "/fondo/movimientos", None);
+        assert_eq!(estado, 200, "{movs}");
+        assert_eq!(movs[0]["tipo"], "APORTE", "movimiento listado");
+        assert_eq!(movs[0]["plan"], Value::Null, "un aporte no lleva plan");
+
+        let (estado, ajenos) = pedir(&m, OTRO, Metodo::Get, "/gastos/2026-11-01/2026-11-12", None);
+        assert_eq!((estado, &ajenos), (200, &json!([])), "el otro no ve nada");
+        let (estado, r) = pedir(
+            &m,
+            DANIEL,
+            Metodo::Get,
+            "/gastos/2026-13-01/2026-11-12",
+            None,
+        );
+        assert_eq!(
+            (estado, codigo(&r)),
+            (404, "RUTA_INEXISTENTE"),
+            "fecha mala"
+        );
+    }
 }

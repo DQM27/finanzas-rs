@@ -1,0 +1,108 @@
+// Tokens del sistema visual (docs/diseno.md, lenguaje de Lattis/Kash).
+// Todo color, radio, tamaño y espacio sale de aquí: ningún componente
+// escribe un hex o un px suelto.
+
+:root {
+  // Paleta Día (Tokyo Day).
+  --fondo: #d0d5e3;
+  --tarjeta: #e1e2e7;
+  --variante: #c4c8da;
+  --realce: #e9e9ed;
+  --texto: #343b58;
+  --texto-2: #565f89;
+  --borde: #848cb5;
+  --vidrio: rgb(132 140 181 / 25%);
+  --pildora: rgb(52 59 88 / 7%);
+  --velo: 82%;
+
+  --acento: #2959aa;
+  --relleno: #2959aa;
+  --sobre: #fff;
+  --exito: #4a6330;
+  --relleno-exito: #4a6330;
+  --error: #a93737;
+  --relleno-error: #a93737;
+  --advertencia: #e0a100;
+  --texto-adv: #7f5600;
+  --info: #006d84;
+
+  // Tonos de sección: gasto, extra, fondo, quincena, moto, instacredit.
+  --s-gasto: #00806a;
+  --s-gasto-r: #00806a;
+  --s-extra: #6d32c9;
+  --s-extra-r: #6d32c9;
+  --s-fondo: #2959aa;
+  --s-fondo-r: #2959aa;
+  --s-quincena: #b85c00;
+  --s-quincena-r: #b85c00;
+  --s-moto: #006d84;
+  --s-moto-r: #006d84;
+  --s-insta: #c4161c;
+  --s-insta-r: #c4161c;
+
+  // Tipografía (escala de iOS).
+  --fuente:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', Roboto, 'Segoe UI',
+    sans-serif;
+  --titulo-grande: 700 30px/36px var(--fuente);
+  --titulo: 700 22px/28px var(--fuente);
+  --cifra: 700 24px/30px var(--fuente);
+  --titulo-medio: 600 17px/22px var(--fuente);
+  --cuerpo: 400 16px/22px var(--fuente);
+  --cuerpo-chico: 400 13px/18px var(--fuente);
+  --etiqueta: 500 12px/16px var(--fuente);
+  --etiqueta-chica: 500 11px/14px var(--fuente);
+
+  // Medidas.
+  --radio-grupo: 14px;
+  --radio-tarjeta: 20px;
+  --radio-control: 16px;
+  --radio-barra: 22px;
+  --alto-renglon: 52px;
+  --alto-boton: 50px;
+  --alto-barra: 58px;
+  --espacio: 12px;
+  --margen: 16px;
+
+  // Movimiento.
+  --curva: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    // Paleta Noche (AMOLED).
+    --fondo: #08080a;
+    --tarjeta: #1f1f24;
+    --variante: #2e2e35;
+    --realce: #2e2e35;
+    --texto: #f2f2f5;
+    --texto-2: #a1a1aa;
+    --borde: #48484f;
+    --vidrio: rgb(255 255 255 / 22%);
+    --pildora: rgb(242 242 245 / 12%);
+    --velo: 78%;
+
+    --acento: #6ea8ff;
+    --relleno: #3366cc;
+    --exito: #4ade80;
+    --relleno-exito: #1f7a44;
+    --error: #ff6b6b;
+    --relleno-error: #c53030;
+    --advertencia: #fbbf24;
+    --texto-adv: #fbbf24;
+    --info: #6cc5e6;
+
+    --s-gasto: #5cc8b2;
+    --s-gasto-r: #00806a;
+    --s-extra: #b79cff;
+    --s-extra-r: #7c45d6;
+    --s-fondo: #6ea8ff;
+    --s-fondo-r: #3366cc;
+    --s-quincena: #ffb547;
+    --s-quincena-r: #b85c00;
+    --s-moto: #6cc5e6;
+    --s-moto-r: #00708a;
+    --s-insta: #ff6b5e;
+    --s-insta-r: #d0312d;
+  }
+}

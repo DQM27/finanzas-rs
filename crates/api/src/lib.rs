@@ -13,11 +13,14 @@
 //! | `GET` | `/perfil` | El perfil propio |
 //! | `PUT` | `/perfil` | Reemplaza el perfil propio |
 //! | `GET` | `/caja-chica` | Caja chica del periodo |
+//! | `GET` | `/gastos/{desde}/{hasta}` | Los gastos entre dos fechas |
 //! | `POST` | `/gastos` | Anota un gasto |
 //! | `DELETE` | `/gastos/{id}` | Deshace un gasto |
+//! | `GET` | `/extras` | Todas las extras |
 //! | `POST` | `/extras` | Anota una extra |
 //! | `DELETE` | `/extras/{id}` | Deshace una extra |
 //! | `GET` | `/fondo` | Estado del fondo |
+//! | `GET` | `/fondo/movimientos` | Los movimientos del fondo |
 //! | `POST` | `/fondo/retiros` | Saca del fondo |
 //! | `POST` | `/fondo/depositos` | Aporta o repone |
 //! | `DELETE` | `/fondo/movimientos/{id}` | Deshace el último movimiento |
@@ -36,11 +39,15 @@ mod errores;
 
 use chrono::NaiveDate;
 use dto::{
-    CajaDto, ExtraDto, FondoDto, GastoRegistradoDto, Marca, NuevaExtra, NuevoDeposito, NuevoGasto,
-    NuevoPerfil, NuevoRetiro, PerfilDto, Presupuesto, QuincenaDto, RetiroDto,
+    CajaDto, ExtraDto, FondoDto, GastoDto, GastoRegistradoDto, Marca, MovimientoFondoDto,
+    NuevaExtra, NuevoDeposito, NuevoGasto, NuevoPerfil, NuevoRetiro, PerfilDto, Presupuesto,
+    QuincenaDto, RetiroDto,
 };
 use errores::{ErrorApi, Resultado};
 use finanzas_aplicacion::casos_de_uso::consultar_caja_chica::ConsultarCajaChica;
+use finanzas_aplicacion::casos_de_uso::consultas::{
+    ListarExtras, ListarGastos, ListarMovimientosFondo,
+};
 use finanzas_aplicacion::casos_de_uso::deshacer::{Deshacer, QueDeshacer};
 use finanzas_aplicacion::casos_de_uso::fondo::{
     ConsultarFondo, DepositarEnFondo, SacarDelFondo, SolicitudDeposito, SolicitudSacar,
@@ -233,6 +240,24 @@ async fn registro<C: Contexto>(
                 .and_then(|r| json(200, &CajaDto::from(r)))
         }
         (Metodo::Post, ["gastos"]) => registrar_gasto(ctx, usuario, p.cuerpo).await,
+        (Metodo::Get, ["gastos", desde, hasta]) => match (fecha(desde), fecha(hasta)) {
+            (Ok(desde), Ok(hasta)) => ListarGastos::new(ctx.gastos())
+                .ejecutar(usuario, desde, hasta)
+                .await
+                .map_err(ErrorApi::from)
+                .and_then(|lista| json(200, &lista.iter().map(GastoDto::from).collect::<Vec<_>>())),
+            _ => Err(ErrorApi::RutaInexistente),
+        },
+        (Metodo::Get, ["extras"]) => ListarExtras::new(ctx.perfiles(), ctx.extras())
+            .ejecutar(usuario)
+            .await
+            .map_err(ErrorApi::from)
+            .and_then(|lista| {
+                json(
+                    200,
+                    &lista.into_iter().map(ExtraDto::from).collect::<Vec<_>>(),
+                )
+            }),
         (Metodo::Post, ["extras"]) => registrar_extra(ctx, usuario, p.cuerpo).await,
         (Metodo::Delete, ["gastos", texto]) => match id(texto) {
             Ok(uuid) => deshacer(ctx, usuario, QueDeshacer::Gasto(GastoId::new(uuid))).await,
@@ -287,6 +312,19 @@ async fn fondo<C: Contexto>(
             .await
             .map_err(ErrorApi::from)
             .and_then(|e| json(200, &FondoDto::from(e))),
+        (Metodo::Get, ["fondo", "movimientos"]) => ListarMovimientosFondo::new(ctx.fondo())
+            .ejecutar(usuario)
+            .await
+            .map_err(ErrorApi::from)
+            .and_then(|lista| {
+                json(
+                    200,
+                    &lista
+                        .iter()
+                        .map(MovimientoFondoDto::from)
+                        .collect::<Vec<_>>(),
+                )
+            }),
         (Metodo::Post, ["fondo", "retiros"]) => sacar(ctx, usuario, p.cuerpo).await,
         (Metodo::Post, ["fondo", "depositos"]) => depositar(ctx, usuario, p.cuerpo).await,
         (Metodo::Delete, ["fondo", "movimientos", texto]) => match id(texto) {
@@ -403,6 +441,7 @@ fn es_ruta_conocida(partes: &[&str]) -> bool {
         partes,
         ["perfil" | "caja-chica" | "gastos" | "extras" | "fondo" | "quincenas"]
             | ["gastos" | "extras" | "quincenas", _]
+            | ["gastos", _, _]
             | ["fondo", "retiros" | "depositos"]
             | ["fondo", "movimientos", _]
             | ["quincenas", _, "marcas"]
