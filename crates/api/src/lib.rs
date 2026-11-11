@@ -29,6 +29,8 @@
 //! | `GET` | `/quincenas/{pago}` | Una quincena |
 //! | `PUT` | `/quincenas/{pago}` | Guarda su presupuesto |
 //! | `PUT` | `/quincenas/{pago}/marcas` | Marca o desmarca una línea |
+//! | `GET` | `/meses/actual` | Las quincenas del mes de hoy |
+//! | `GET` | `/meses/{AAAA-MM}` | Las quincenas de un mes |
 
 #![expect(
     clippy::future_not_send,
@@ -38,9 +40,9 @@
 pub mod dto;
 mod errores;
 
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 use dto::{
-    CajaDto, CortesHoyDto, ExtraDto, FondoDto, GastoDto, GastoRegistradoDto, Marca,
+    CajaDto, CortesHoyDto, ExtraDto, FondoDto, GastoDto, GastoRegistradoDto, Marca, MesDto,
     MovimientoFondoDto, NuevaExtra, NuevoDeposito, NuevoGasto, NuevoPerfil, NuevoRetiro, PerfilDto,
     Presupuesto, QuincenaDto, RetiroDto,
 };
@@ -56,7 +58,7 @@ use finanzas_aplicacion::casos_de_uso::fondo::{
 };
 use finanzas_aplicacion::casos_de_uso::perfil::{ConsultarPerfil, GuardarPerfil, SolicitudPerfil};
 use finanzas_aplicacion::casos_de_uso::quincena::{
-    ConsultarQuincena, GuardarPresupuesto, MarcarLinea, SolicitudMarca, SolicitudPresupuesto,
+    Presupuestos, SolicitudMarca, SolicitudPresupuesto,
 };
 use finanzas_aplicacion::casos_de_uso::registrar_extra::{RegistrarExtra, SolicitudExtra};
 use finanzas_aplicacion::casos_de_uso::registrar_gasto::{RegistrarGasto, SolicitudGasto};
@@ -193,6 +195,10 @@ async fn enrutar<C: Contexto>(ctx: &C, usuario: UsuarioId, p: Peticion<'_>) -> R
         ["caja-chica" | "gastos" | "extras", ..] => registro(ctx, usuario, &p, &partes).await,
         ["fondo", ..] => fondo(ctx, usuario, &p, &partes).await,
         ["quincenas", ..] => quincenas(ctx, usuario, &p, &partes).await,
+        ["meses", cual] => match p.metodo {
+            Metodo::Get => Some(consultar_mes(ctx, usuario, cual).await),
+            _ => None,
+        },
         _ => None,
     };
     respuesta.unwrap_or_else(|| {
@@ -406,11 +412,29 @@ async fn consultar_quincena<C: Contexto>(ctx: &C, usuario: UsuarioId, cual: &str
     } else {
         Some(fecha(cual)?)
     };
-    let r = ConsultarQuincena::new(ctx.perfiles(), ctx.quincenas(), ctx.reloj())
-        .ejecutar(usuario, pago)
-        .await?
-        .ok_or(ErrorApi::SinPresupuesto)?;
+    let r = presupuestos(ctx).consultar(usuario, pago).await?;
     json(200, &QuincenaDto::from(r))
+}
+
+fn presupuestos<C: Contexto>(
+    ctx: &C,
+) -> Presupuestos<'_, C::Perfiles, C::Quincenas, C::Extras, C::Reloj> {
+    Presupuestos::new(ctx.perfiles(), ctx.quincenas(), ctx.extras(), ctx.reloj())
+}
+
+/// `actual` o `AAAA-MM`.
+async fn consultar_mes<C: Contexto>(ctx: &C, usuario: UsuarioId, cual: &str) -> Resultado {
+    let mes = if cual == "actual" {
+        None
+    } else {
+        if cual.len() != 7 {
+            return Err(ErrorApi::RutaInexistente);
+        }
+        let primero = fecha(&format!("{cual}-01"))?;
+        Some((primero.year(), primero.month()))
+    };
+    let r = presupuestos(ctx).mes(usuario, mes).await?;
+    json(200, &MesDto::from(r))
 }
 
 async fn guardar_presupuesto<C: Contexto>(
@@ -421,8 +445,8 @@ async fn guardar_presupuesto<C: Contexto>(
 ) -> Resultado {
     let pago = fecha(texto)?;
     let q: Presupuesto = cuerpo(bytes)?;
-    let r = GuardarPresupuesto::new(ctx.perfiles(), ctx.quincenas())
-        .ejecutar(SolicitudPresupuesto {
+    let r = presupuestos(ctx)
+        .guardar(SolicitudPresupuesto {
             usuario,
             pago,
             ingresos: q.ingresos.into_iter().map(Into::into).collect(),
@@ -435,8 +459,8 @@ async fn guardar_presupuesto<C: Contexto>(
 async fn marcar<C: Contexto>(ctx: &C, usuario: UsuarioId, texto: &str, bytes: &[u8]) -> Resultado {
     let pago = fecha(texto)?;
     let m: Marca = cuerpo(bytes)?;
-    let r = MarcarLinea::new(ctx.quincenas())
-        .ejecutar(SolicitudMarca {
+    let r = presupuestos(ctx)
+        .marcar(SolicitudMarca {
             usuario,
             pago,
             lado: m.lado.into(),
@@ -452,7 +476,7 @@ fn es_ruta_conocida(partes: &[&str]) -> bool {
     matches!(
         partes,
         ["perfil" | "caja-chica" | "gastos" | "extras" | "fondo" | "quincenas"]
-            | ["gastos" | "extras" | "quincenas", _]
+            | ["gastos" | "extras" | "quincenas" | "meses", _]
             | ["gastos", _, _]
             | ["fondo", "retiros" | "depositos"]
             | ["fondo", "movimientos", _]

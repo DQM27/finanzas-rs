@@ -1,0 +1,156 @@
+// Mes en la computadora: totales arriba y Q1 | Q2 lado a lado.
+// Sólo tokens (styles/tokens.scss).
+
+.mes {
+  height: auto;
+  min-height: 100dvh;
+}
+
+.cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--margen);
+}
+
+.cabeza h1 {
+  margin: 0;
+  font: var(--titulo-grande);
+}
+
+.navegar {
+  display: flex;
+  align-items: center;
+  gap: var(--chico);
+}
+
+.nombre {
+  min-width: calc(var(--ancho-buscador) * 0.7);
+  font: var(--titulo-medio);
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.flecha,
+.hoy {
+  display: inline-grid;
+  place-items: center;
+  height: var(--alto-herramienta);
+  border: 0;
+  border-radius: var(--radio-icono);
+  background: var(--tarjeta);
+  color: var(--texto);
+  font: var(--cuerpo-chico);
+  cursor: pointer;
+}
+
+.flecha {
+  width: var(--alto-herramienta);
+}
+
+.hoy {
+  margin-left: var(--espacio);
+  padding: 0 var(--margen);
+  font-weight: 600;
+}
+
+.flecha:disabled,
+.hoy:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.atras {
+  transform: scaleX(-1);
+}
+
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--ancho-buscador) * 0.75), 1fr));
+  gap: var(--margen);
+}
+
+.quincenas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--ancho-buscador) * 1.3), 1fr));
+  align-items: start;
+  gap: calc(var(--margen) * 1.5);
+}
+
+.quincena {
+  display: flex;
+  flex-direction: column;
+  gap: var(--margen);
+}
+
+.titulo-q {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espacio);
+}
+
+.titulo-q h2 {
+  margin: 0;
+  font: var(--titulo-medio);
+}
+
+.pago {
+  color: var(--texto-2);
+  font: var(--cuerpo);
+}
+
+.sobra {
+  font: var(--cuerpo);
+  font-weight: 600;
+  color: var(--exito);
+}
+
+.sobra.negativa {
+  color: var(--error);
+}
+
+.solo {
+  color: var(--texto-2);
+}
+
+.automatico.hecho .solo {
+  color: var(--exito);
+}
+
+.hecho .concepto,
+.hecho .monto {
+  color: var(--texto-2);
+  text-decoration: line-through;
+}
+
+.pendiente {
+  color: var(--error);
+}
+
+.pie-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio);
+  padding: 0 var(--margen);
+  font: var(--cuerpo-chico);
+  color: var(--texto-2);
+}
+
+.editar {
+  color: var(--seccion);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.editar:hover {
+  text-decoration: underline;
+}
+
+.falla {
+  margin: 0;
+  font: var(--cuerpo-chico);
+  font-weight: 600;
+}

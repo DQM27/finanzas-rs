@@ -224,8 +224,8 @@ Baja desde arriba bajo el área segura con `radio-control`, texto blanco 600 y f
 
 Hechos, en `apps/web/src/app/ui/`: `fz-grupo`, `fz-renglon`, `fz-tarjeta` (de resumen
 y teñida), `fz-segmentado`, `fz-barra-secciones`, `fz-aviso` (con el servicio
-`Avisos`), `fz-esqueleto`, `button[fz-boton]` y `fz-icono` (trazos propios, sin
-librería). La página **Más → Muestrario** los muestra todos con datos de ejemplo.
+`Avisos`), `fz-esqueleto`, `button[fz-boton]`, `button[fz-casilla]` (marcar un pago
+o un ingreso; la usan Quincena y Mes) y `fz-icono` (trazos propios, sin librería). La página **Más → Muestrario** los muestra todos con datos de ejemplo.
 
 Las medidas internas de los componentes (tamaños de ícono, divisor, columna de
 etiqueta, ancho máximo, duraciones) también son tokens, en `tokens.scss`.

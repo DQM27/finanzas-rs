@@ -2,12 +2,121 @@
 //!
 //! Cada quincena es de un usuario y se identifica por la fecha del pago que la
 //! financia (la fecha de pago de un corte del calendario).
+//!
+//! Lo que entra se arma de dos partes: lo que entra solo con el pago (el
+//! salario neto y las extras de ese pago, Q7) y los otros ingresos que se
+//! escriben a mano (una ayuda, un saldo que quedó).
 
+use crate::calendario::CalendarioCortes;
 use crate::dinero::Colones;
+use crate::extra::{Extra, neto_en_pago};
+use crate::perfil::PerfilSalarial;
 use crate::texto::Concepto;
 use crate::usuario::UsuarioId;
 use chrono::NaiveDate;
+use std::iter::Sum;
 use thiserror::Error;
+
+/// Lo que entra solo en una quincena, sin escribirlo (Q7): el salario neto
+/// del perfil (P) y lo neto de las extras que se pagan ese día (E4). Llega
+/// con el pago: el día de pago ya cuenta como recibido.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct IngresosAutomaticos {
+    salario: Colones,
+    extras: Colones,
+    llegaron: bool,
+}
+
+impl IngresosAutomaticos {
+    /// Lo que entra solo en el pago `pago`, visto desde `hoy`.
+    pub fn de(
+        salarial: &PerfilSalarial,
+        calendario: &CalendarioCortes,
+        extras: &[Extra],
+        pago: NaiveDate,
+        hoy: NaiveDate,
+    ) -> Self {
+        Self {
+            salario: salarial.salario_neto_quincena(),
+            extras: neto_en_pago(extras, pago, salarial, calendario),
+            llegaron: pago <= hoy,
+        }
+    }
+
+    /// El salario neto de la quincena.
+    pub const fn salario(&self) -> Colones {
+        self.salario
+    }
+
+    /// Lo neto de las extras que se pagan ese día.
+    pub const fn extras(&self) -> Colones {
+        self.extras
+    }
+
+    /// `true` si el pago ya llegó (es hoy o ya pasó).
+    pub const fn llegaron(&self) -> bool {
+        self.llegaron
+    }
+}
+
+/// Los números de una quincena, o de varias sumadas (un mes).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Balance {
+    salario: Colones,
+    extras: Colones,
+    otros_ingresos: Colones,
+    total_pagos: Colones,
+    falta_por_pagar: Colones,
+}
+
+impl Balance {
+    /// El salario neto.
+    pub const fn salario(&self) -> Colones {
+        self.salario
+    }
+
+    /// Lo neto de las extras.
+    pub const fn extras(&self) -> Colones {
+        self.extras
+    }
+
+    /// Los ingresos escritos a mano.
+    pub const fn otros_ingresos(&self) -> Colones {
+        self.otros_ingresos
+    }
+
+    /// Todo lo que entra: salario, extras y otros ingresos.
+    pub fn total_ingresos(&self) -> Colones {
+        self.salario + self.extras + self.otros_ingresos
+    }
+
+    /// Todo lo presupuestado para pagar.
+    pub const fn total_pagos(&self) -> Colones {
+        self.total_pagos
+    }
+
+    /// Lo que sobra si todo sale como está presupuestado (Q1).
+    pub fn sobra(&self) -> Colones {
+        self.total_ingresos() - self.total_pagos
+    }
+
+    /// Los pagos sin marcar (Q2).
+    pub const fn falta_por_pagar(&self) -> Colones {
+        self.falta_por_pagar
+    }
+}
+
+impl Sum for Balance {
+    fn sum<I: Iterator<Item = Self>>(balances: I) -> Self {
+        balances.fold(Self::default(), |a, b| Self {
+            salario: a.salario + b.salario,
+            extras: a.extras + b.extras,
+            otros_ingresos: a.otros_ingresos + b.otros_ingresos,
+            total_pagos: a.total_pagos + b.total_pagos,
+            falta_por_pagar: a.falta_por_pagar + b.falta_por_pagar,
+        })
+    }
+}
 
 /// Una línea del presupuesto (un ingreso o un pago).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -153,28 +262,20 @@ impl Quincena {
         Ok(())
     }
 
-    /// Total de ingresos presupuestados.
-    pub fn total_ingresos(&self) -> Colones {
-        self.ingresos.iter().map(Linea::monto).sum()
-    }
-
-    /// Total de pagos presupuestados.
-    pub fn total_pagos(&self) -> Colones {
-        self.pagos.iter().map(Linea::monto).sum()
-    }
-
-    /// Lo que falta pagar.
-    pub fn falta_por_pagar(&self) -> Colones {
-        self.pagos
-            .iter()
-            .filter(|l| !l.hecho)
-            .map(Linea::monto)
-            .sum()
-    }
-
-    /// Lo que sobra si todo sale como está presupuestado.
-    pub fn sobra(&self) -> Colones {
-        self.total_ingresos() - self.total_pagos()
+    /// Los números de la quincena con lo que entra solo (Q1, Q2, Q7).
+    pub fn balance(&self, automaticos: &IngresosAutomaticos) -> Balance {
+        Balance {
+            salario: automaticos.salario,
+            extras: automaticos.extras,
+            otros_ingresos: self.ingresos.iter().map(Linea::monto).sum(),
+            total_pagos: self.pagos.iter().map(Linea::monto).sum(),
+            falta_por_pagar: self
+                .pagos
+                .iter()
+                .filter(|l| !l.hecho)
+                .map(Linea::monto)
+                .sum(),
+        }
     }
 
     /// Pagos hechos y total de pagos.
@@ -198,32 +299,79 @@ impl Quincena {
 
 #[cfg(test)]
 mod tests {
-    use super::{ErrorQuincena, Lado, Linea, Quincena};
+    use super::{Balance, ErrorQuincena, IngresosAutomaticos, Lado, Linea, Quincena};
+    use crate::calendario::{CalendarioCortes, Corte};
     use crate::dinero::Colones;
+    use crate::extra::{Extra, ExtraId, TipoExtra};
+    use crate::perfil::PerfilSalarial;
+    use crate::proporcion::Proporcion;
     use crate::texto::Concepto;
     use crate::usuario::UsuarioId;
     use chrono::NaiveDate;
     use uuid::Uuid;
 
+    fn f(a: i32, m: u32, d: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(a, m, d).unwrap()
+    }
+
     fn pago_13() -> NaiveDate {
-        NaiveDate::from_ymd_opt(2026, 11, 13).unwrap()
+        f(2026, 11, 13)
     }
 
     fn l(concepto: &str, monto: i64) -> Linea {
         Linea::new(Concepto::new(concepto).unwrap(), Colones::new(monto)).unwrap()
     }
 
-    /// La quincena del 13 de noviembre de 2026, tal como está en la hoja.
+    fn salarial() -> PerfilSalarial {
+        PerfilSalarial::new(
+            Colones::new(293_000),
+            Proporcion::desde_diezmilesimas(8617),
+            Colones::new(20_253),
+        )
+        .unwrap()
+    }
+
+    fn calendario() -> CalendarioCortes {
+        CalendarioCortes::new(vec![
+            Corte::new(f(2026, 10, 17), f(2026, 11, 1), f(2026, 11, 4), pago_13()).unwrap(),
+            Corte::new(
+                f(2026, 11, 2),
+                f(2026, 11, 13),
+                f(2026, 11, 17),
+                f(2026, 11, 30),
+            )
+            .unwrap(),
+        ])
+        .unwrap()
+    }
+
+    fn extra(n: u128, fecha: NaiveDate, bruto: i64) -> Extra {
+        Extra::reconstruir(
+            ExtraId::new(Uuid::from_u128(n)),
+            UsuarioId::new(Uuid::from_u128(1)),
+            fecha,
+            TipoExtra::Otra,
+            Colones::new(bruto),
+        )
+    }
+
+    /// Lo que entra solo el 13 de noviembre: el salario y una extra de
+    /// ₡120 000 brutos trabajada el 31 de octubre (₡103 404 netos).
+    fn automaticos_13(hoy: NaiveDate) -> IngresosAutomaticos {
+        let extras = [
+            extra(1, f(2026, 10, 31), 120_000),
+            extra(2, f(2026, 11, 5), 25_800),
+        ];
+        IngresosAutomaticos::de(&salarial(), &calendario(), &extras, pago_13(), hoy)
+    }
+
+    /// La quincena del 13 de noviembre de 2026, tal como está en la hoja:
+    /// el salario y las extras entran solos; a mano, sólo lo demás.
     fn q1_noviembre() -> Quincena {
         Quincena::new(
             UsuarioId::new(Uuid::from_u128(1)),
             pago_13(),
-            vec![
-                l("salario base", 232_225),
-                l("extras", 103_404),
-                l("papá", 65_000),
-                l("saldo para operar", 14_300),
-            ],
+            vec![l("papá", 65_000), l("saldo para operar", 14_300)],
             vec![
                 l("moto", 104_000),
                 l("comida", 100_000),
@@ -239,18 +387,85 @@ mod tests {
     }
 
     #[test]
+    fn el_salario_y_las_extras_del_pago_entran_solos() {
+        let a = automaticos_13(f(2026, 11, 11));
+        assert_eq!(a.salario(), Colones::new(232_225), "salario neto (P)");
+        assert_eq!(
+            a.extras(),
+            Colones::new(103_404),
+            "sólo la extra cuyo corte paga el 13 (E4)"
+        );
+        assert!(!a.llegaron(), "el 11 todavía no llega");
+        assert!(
+            automaticos_13(pago_13()).llegaron(),
+            "el día de pago ya llegó"
+        );
+    }
+
+    #[test]
     fn totales_y_sobra_iguales_a_la_hoja() {
-        let q = q1_noviembre();
-        assert_eq!(q.total_ingresos(), Colones::new(414_929), "total ingresos");
-        assert_eq!(q.total_pagos(), Colones::new(374_000), "total pagos");
-        assert_eq!(q.sobra(), Colones::new(40_929), "sobra");
+        let b = q1_noviembre().balance(&automaticos_13(pago_13()));
+        assert_eq!(b.otros_ingresos(), Colones::new(79_300), "papá + saldo");
+        assert_eq!(b.total_ingresos(), Colones::new(414_929), "total ingresos");
+        assert_eq!(b.total_pagos(), Colones::new(374_000), "total pagos");
+        assert_eq!(b.sobra(), Colones::new(40_929), "sobra");
+    }
+
+    #[test]
+    fn sin_presupuesto_igual_entra_el_salario() {
+        let vacia = Quincena::new(
+            UsuarioId::new(Uuid::from_u128(1)),
+            pago_13(),
+            vec![],
+            vec![],
+        );
+        let b = vacia.balance(&automaticos_13(pago_13()));
+        assert_eq!(
+            b.total_ingresos(),
+            Colones::new(335_629),
+            "salario + extras"
+        );
+        assert_eq!(b.sobra(), Colones::new(335_629), "nada que pagar");
+    }
+
+    #[test]
+    fn el_mes_suma_sus_quincenas() {
+        let q1 = q1_noviembre().balance(&automaticos_13(pago_13()));
+        let q2 = Quincena::new(
+            UsuarioId::new(Uuid::from_u128(1)),
+            f(2026, 11, 30),
+            vec![],
+            vec![l("comida", 100_000)],
+        )
+        .balance(&IngresosAutomaticos::de(
+            &salarial(),
+            &calendario(),
+            &[extra(2, f(2026, 11, 5), 25_800)],
+            f(2026, 11, 30),
+            pago_13(),
+        ));
+        let mes: Balance = [q1, q2].into_iter().sum();
+        assert_eq!(mes.salario(), Colones::new(464_450), "dos salarios");
+        assert_eq!(
+            mes.extras(),
+            Colones::new(103_404 + 22_232),
+            "extras de los dos pagos"
+        );
+        assert_eq!(mes.total_pagos(), Colones::new(474_000), "pagos de las dos");
+        assert_eq!(mes.sobra(), q1.sobra() + q2.sobra(), "sobra del mes");
+        assert_eq!(
+            std::iter::empty().sum::<Balance>(),
+            Balance::default(),
+            "un mes sin quincenas"
+        );
     }
 
     #[test]
     fn marcar_pagos_baja_lo_que_falta() {
         let mut q = q1_noviembre();
         q.marcar(Lado::Pago, 0, true).unwrap();
-        assert_eq!(q.falta_por_pagar(), Colones::new(270_000), "pagada la moto");
+        let falta = q.balance(&automaticos_13(pago_13())).falta_por_pagar();
+        assert_eq!(falta, Colones::new(270_000), "pagada la moto");
         assert_eq!(q.avance(), (1, 9), "1 de 9");
         assert_eq!(
             q.marcar(Lado::Pago, 99, true),
@@ -273,9 +488,9 @@ mod tests {
         let mut q = q1_noviembre();
         q.marcar(Lado::Pago, 0, true).unwrap(); // moto
         q.marcar(Lado::Pago, 4, true).unwrap(); // internet
-        q.marcar(Lado::Ingreso, 0, true).unwrap(); // salario
+        q.marcar(Lado::Ingreso, 0, true).unwrap(); // papá
         let nueva = q.con_presupuesto(
-            vec![l("salario base", 232_225), l("extras", 91_168)],
+            vec![l("papá", 70_000), l("venta", 5_000)],
             vec![
                 l("moto", 125_000),
                 l("comida", 100_000),
@@ -290,9 +505,9 @@ mod tests {
             vec![true, false, false, true],
             "la moto y el internet siguen pagados aunque cambie el monto o la posición"
         );
-        assert!(nueva.ingresos()[0].hecho(), "el salario sigue recibido");
+        assert!(nueva.ingresos()[0].hecho(), "lo de papá sigue recibido");
         assert_eq!(
-            nueva.falta_por_pagar(),
+            nueva.balance(&automaticos_13(pago_13())).falta_por_pagar(),
             Colones::new(130_000),
             "comida + refri"
         );

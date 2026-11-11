@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 const TRAZOS = {
   inicio: 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z',
   quincena: 'M4 6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM4 10h16M8 3v4M16 3v4',
+  mes: 'M4 6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM4 10h16M12 10v10',
   anotar: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8v8M8 12h8',
   mas: 'M5 12h.01M12 12h.01M19 12h.01',
   chevron: 'm9 6 6 6-6 6',

@@ -22,6 +22,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pantallas/mas').then((m) => m.Mas),
   },
   {
+    path: 'mes',
+    title: 'Mes · Finanzas',
+    loadComponent: () => import('./escritorio/mes').then((m) => m.Mes),
+  },
+  {
     path: 'extras',
     title: 'Extras · Finanzas',
     loadComponent: () => import('./escritorio/extras').then((m) => m.Extras),

@@ -55,7 +55,7 @@ describe('marco según el nivel', () => {
     expect(raiz.querySelector('fz-barra-lateral')).not.toBeNull();
     expect(raiz.querySelector('fz-barra-secciones')).toBeNull();
     const enlaces = [...raiz.querySelectorAll('fz-barra-lateral a')].map((a) => a.textContent?.trim());
-    expect(enlaces).toEqual(['Inicio', 'Quincena', 'Anotar', 'Extras', 'Gastos', 'Configuración']);
+    expect(enlaces).toEqual(['Inicio', 'Mes', 'Quincena', 'Anotar', 'Extras', 'Gastos', 'Configuración']);
   });
 
   it('en el celular, la barra de secciones de siempre', async () => {

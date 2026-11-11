@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
 import type {
   Caja, CortesHoy, Extra, Fondo, Gasto, GastoRegistrado, MovimientoFondo, Perfil, PerfilPedido,
-  Quincena, Retiro,
+  Mes, Quincena, Retiro,
 } from './api';
 
 /** Un error ya traducido a algo que se puede mostrar. */
@@ -110,6 +110,11 @@ export class Finanzas {
 
   quincena(pago: string | 'actual'): Observable<Quincena> {
     return this.#get(`/api/quincenas/${pago}`);
+  }
+
+  /** Las quincenas de un mes (`AAAA-MM`) con la suma. */
+  mes(mes: string | 'actual'): Observable<Mes> {
+    return this.#get(`/api/meses/${mes}`);
   }
 
   guardarPresupuesto(

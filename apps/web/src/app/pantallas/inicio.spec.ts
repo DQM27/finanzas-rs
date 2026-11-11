@@ -14,8 +14,11 @@ const CORTE = {
 };
 const QUINCENA = {
   pago: '2026-11-30',
+  presupuestada: true,
+  automaticos: { salario: 232225, extras: 0, llegaron: true },
   ingresos: [],
   pagos: [],
+  otros_ingresos: 0,
   total_ingresos: 232225,
   total_pagos: 250000,
   sobra: -17775,
@@ -137,15 +140,24 @@ describe('Inicio', () => {
     http.expectOne('/api/caja-chica').flush(CAJA);
     http.expectOne('/api/perfil').flush({ tope_caja_chica: 5000 });
     http.expectOne('/api/cortes/hoy').flush({ en_curso: null, proximo_pago: null, dias_para_pago: null });
-    http
-      .expectOne('/api/quincenas/actual')
-      .flush({ codigo: 'SIN_PRESUPUESTO', mensaje: 'esa quincena todavía no tiene presupuesto' }, NO_ENCONTRADO);
+    http.expectOne('/api/quincenas/actual').flush({
+      ...QUINCENA,
+      presupuestada: false,
+      automaticos: { salario: 232225, extras: 22232, llegaron: true },
+      total_ingresos: 254457,
+      total_pagos: 0,
+      sobra: 254457,
+      falta_por_pagar: 0,
+      avance: { hechos: 0, total: 0 },
+    });
     http.expectOne('/api/fondo').flush({ saldo: 0, por_reponer: 0, cuota_mensual: 0 });
     await fixture.whenStable();
     http.expectOne('/api/gastos/2026-11-13/2026-11-29').flush([]);
     await fixture.whenStable();
 
-    expect(tarjeta(pagina, 'Quincena').textContent).toContain('Tocá para armarlo');
+    const quincena = tarjeta(pagina, 'Quincena del LUN 30 nov');
+    expect(quincena.textContent).toContain('tocá para armarlo');
+    expect(quincena.querySelector('.cifra')?.textContent).toContain('₡254,457');
     expect(tarjeta(pagina, 'Próximo pago').textContent).toContain('ya no cubre');
     expect(tarjeta(pagina, 'Caja chica').querySelector('.cifra')?.textContent).toContain('₡4,000');
     expect(pagina.querySelector('fz-grupo')?.textContent).toContain('Todavía no anotaste gastos');

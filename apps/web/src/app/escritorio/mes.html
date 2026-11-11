@@ -1,0 +1,104 @@
+<main class="pantalla-ancha mes" data-seccion="quincena">
+  <header class="cabeza">
+    <h1>Mes</h1>
+    <div class="navegar">
+      <button type="button" class="flecha" aria-label="Mes anterior" [disabled]="!visto()" (click)="mover(-1)">
+        <fz-icono nombre="chevron" class="atras" />
+      </button>
+      <span class="nombre" aria-live="polite">{{ titulo() }}</span>
+      <button type="button" class="flecha" aria-label="Mes siguiente" [disabled]="!visto()" (click)="mover(1)">
+        <fz-icono nombre="chevron" />
+      </button>
+      <button type="button" class="hoy" [disabled]="pedido() === 'actual'" (click)="pedido.set('actual')">
+        Este mes
+      </button>
+    </div>
+  </header>
+
+  @let m = mes();
+  @if (m.estado === 'cargando') {
+    <div class="resumen">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <fz-esqueleto alto="calc(var(--alto-renglon) * 2)" />
+      }
+    </div>
+  } @else if (m.estado === 'falla') {
+    <fz-tarjeta clave="Mes" [tenida]="true" tono="error">
+      <p class="falla" role="alert">{{ m.mensaje }}</p>
+    </fz-tarjeta>
+  } @else {
+    @let b = m.valor.balance;
+    <section class="resumen" aria-label="Totales del mes">
+      <fz-tarjeta clave="Entra" [monto]="b.total_ingresos"
+                  [nota]="'Salario ' + (b.salario | colones) + ' · extras ' + (b.extras | colones)" />
+      <fz-tarjeta clave="Pagos" [monto]="b.total_pagos" />
+      <fz-tarjeta [clave]="b.sobra < 0 ? 'Va a faltar' : 'Sobra'" [monto]="b.sobra"
+                  [tenida]="b.sobra < 0" tono="error" />
+      <fz-tarjeta clave="Falta pagar" [monto]="b.falta_por_pagar" />
+    </section>
+
+    @if (m.valor.quincenas.length === 0) {
+      <fz-tarjeta clave="Sin quincenas"
+                  nota="El calendario de cortes no tiene pagos en este mes. Se cargan en Configuración." />
+    }
+
+    <div class="quincenas">
+      @for (q of m.valor.quincenas; track q.pago; let n = $index) {
+        <section class="quincena" [attr.aria-label]="'Q' + (n + 1)">
+          <header class="titulo-q">
+            <h2>Q{{ n + 1 }} <span class="pago">· pago del {{ q.pago | fechaCorta }}</span></h2>
+            <span class="sobra cifras" [class.negativa]="q.sobra < 0">
+              {{ q.sobra < 0 ? 'Falta' : 'Sobra' }} {{ q.sobra | colones }}
+            </span>
+          </header>
+
+          <fz-grupo [titulo]="'Ingresos · ' + (q.total_ingresos | colones)">
+            @let a = q.automaticos;
+            @for (auto of [{ concepto: 'Salario', monto: a.salario }, { concepto: 'Extras del pago', monto: a.extras }]; track auto.concepto) {
+              <fz-renglon [conIcono]="true" class="automatico" [class.hecho]="a.llegaron">
+                <fz-icono slot="icono" class="solo" [nombre]="a.llegaron ? 'check' : 'extras'" />
+                <span class="linea-1">{{ auto.concepto }}</span>
+                <span class="linea-2">Entra solo</span>
+                <span slot="valor" class="cifras">{{ auto.monto | colones }}</span>
+              </fz-renglon>
+            }
+            @for (l of q.ingresos; track $index; let i = $index) {
+              <fz-renglon [conIcono]="true" [class.hecho]="l.hecho">
+                <button fz-casilla slot="icono" type="button" [hecho]="l.hecho" [attr.aria-label]="l.concepto"
+                        [disabled]="marcando() === q.pago + '-INGRESO-' + i"
+                        (click)="marcar(q, 'INGRESO', i, l)"></button>
+                <span class="linea-1 concepto">{{ l.concepto }}</span>
+                <span slot="valor" class="cifras monto">{{ l.monto | colones }}</span>
+              </fz-renglon>
+            }
+          </fz-grupo>
+
+          <fz-grupo [titulo]="'Pagos · ' + q.avance.hechos + ' de ' + q.avance.total"
+                    [nota]="q.presupuestada ? '' : 'Todavía sin presupuesto.'">
+            @for (l of q.pagos; track $index; let i = $index) {
+              <fz-renglon [conIcono]="true" [class.hecho]="l.hecho">
+                <button fz-casilla slot="icono" type="button" [hecho]="l.hecho" [attr.aria-label]="l.concepto"
+                        [disabled]="marcando() === q.pago + '-PAGO-' + i"
+                        (click)="marcar(q, 'PAGO', i, l)"></button>
+                <span class="linea-1 concepto">{{ l.concepto }}</span>
+                <span slot="valor" class="cifras monto" [class.pendiente]="!l.hecho">{{ l.monto | colones }}</span>
+              </fz-renglon>
+            }
+          </fz-grupo>
+
+          <footer class="pie-q">
+            <span class="cifras">
+              Pagos {{ q.total_pagos | colones }}
+              @if (q.falta_por_pagar > 0) {
+                · falta pagar {{ q.falta_por_pagar | colones }}
+              }
+            </span>
+            <a class="editar" routerLink="/quincena" [queryParams]="{ pago: q.pago }">
+              {{ q.presupuestada ? 'Editar presupuesto' : 'Armar presupuesto' }}
+            </a>
+          </footer>
+        </section>
+      }
+    </div>
+  }
+</main>

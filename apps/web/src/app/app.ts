@@ -42,6 +42,7 @@ export class App {
     {
       enlaces: [
         { ruta: '/', etiqueta: 'Inicio', icono: 'inicio' },
+        { ruta: '/mes', etiqueta: 'Mes', icono: 'mes' },
         { ruta: '/quincena', etiqueta: 'Quincena', icono: 'quincena' },
         { ruta: '/anotar', etiqueta: 'Anotar', icono: 'anotar' },
       ],

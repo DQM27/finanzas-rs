@@ -1,42 +1,44 @@
-//! El presupuesto de cada quincena: armarlo, verlo y marcar lo pagado.
+//! El presupuesto de cada quincena y del mes: armarlo, verlo y marcar lo
+//! pagado. Lo que entra solo (salario y extras, Q7) lo calcula el dominio con
+//! el perfil y las extras del usuario; aquí sólo se buscan los datos.
 
 use crate::errores::ErrorAplicacion;
-use crate::puertos::{Reloj, RepositorioPerfiles, RepositorioQuincenas};
-use chrono::NaiveDate;
+use crate::puertos::{Reloj, RepositorioExtras, RepositorioPerfiles, RepositorioQuincenas};
+use chrono::{Datelike, NaiveDate};
 use finanzas_dominio::calendario::Corte;
 use finanzas_dominio::dinero::Colones;
-use finanzas_dominio::quincena::{Lado, Linea, Quincena};
+use finanzas_dominio::extra::Extra;
+use finanzas_dominio::perfil::Perfil;
+use finanzas_dominio::quincena::{Balance, IngresosAutomaticos, Lado, Linea, Quincena};
 use finanzas_dominio::texto::Concepto;
 use finanzas_dominio::usuario::UsuarioId;
 
 /// Una quincena con sus números ya calculados por el dominio.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResumenQuincena {
-    /// La quincena con sus líneas y marcas.
+    /// La quincena con sus líneas y marcas (vacía si no tiene presupuesto).
     pub quincena: Quincena,
-    /// Suma de ingresos.
-    pub total_ingresos: Colones,
-    /// Suma de pagos.
-    pub total_pagos: Colones,
-    /// Ingresos menos pagos (Q1).
-    pub sobra: Colones,
-    /// Pagos sin marcar (Q2).
-    pub falta_por_pagar: Colones,
+    /// `false` si todavía no se le armó presupuesto.
+    pub presupuestada: bool,
+    /// Lo que entra solo (Q7).
+    pub automaticos: IngresosAutomaticos,
+    /// Totales, sobra (Q1) y falta por pagar (Q2).
+    pub balance: Balance,
     /// Pagos hechos y pagos en total.
     pub avance: (usize, usize),
 }
 
-impl ResumenQuincena {
-    fn de(quincena: Quincena) -> Self {
-        Self {
-            total_ingresos: quincena.total_ingresos(),
-            total_pagos: quincena.total_pagos(),
-            sobra: quincena.sobra(),
-            falta_por_pagar: quincena.falta_por_pagar(),
-            avance: quincena.avance(),
-            quincena,
-        }
-    }
+/// Un mes: sus quincenas (C6) y la suma de todas.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResumenMes {
+    /// Año.
+    pub anio: i32,
+    /// Mes (1 a 12).
+    pub mes: u32,
+    /// Las quincenas cuyo pago cae en el mes, en orden.
+    pub quincenas: Vec<ResumenQuincena>,
+    /// La suma de sus balances.
+    pub balance: Balance,
 }
 
 /// Una línea tal como llega de la interfaz.
@@ -55,124 +57,10 @@ pub struct SolicitudPresupuesto {
     pub usuario: UsuarioId,
     /// Fecha del pago que financia la quincena.
     pub pago: NaiveDate,
-    /// Lo que entra.
+    /// Los otros ingresos (el salario y las extras entran solos).
     pub ingresos: Vec<LineaPedida>,
     /// Lo que se paga.
     pub pagos: Vec<LineaPedida>,
-}
-
-fn lineas(pedidas: Vec<LineaPedida>) -> Result<Vec<Linea>, ErrorAplicacion> {
-    pedidas
-        .into_iter()
-        .map(|l| {
-            Ok(Linea::new(
-                Concepto::new(&l.concepto)?,
-                Colones::new(l.monto),
-            )?)
-        })
-        .collect()
-}
-
-/// Caso de uso: guardar (o rehacer) el presupuesto de una quincena.
-#[derive(Debug)]
-pub struct GuardarPresupuesto<'a, P, Q> {
-    perfiles: &'a P,
-    quincenas: &'a Q,
-}
-
-impl<'a, P, Q> GuardarPresupuesto<'a, P, Q>
-where
-    P: RepositorioPerfiles,
-    Q: RepositorioQuincenas,
-{
-    /// Arma el caso de uso.
-    pub const fn new(perfiles: &'a P, quincenas: &'a Q) -> Self {
-        Self {
-            perfiles,
-            quincenas,
-        }
-    }
-
-    /// El pago tiene que estar en el calendario (Q5). Si ya había presupuesto
-    /// para esa quincena se reemplaza conservando lo marcado (Q4).
-    pub async fn ejecutar(
-        &self,
-        s: SolicitudPresupuesto,
-    ) -> Result<ResumenQuincena, ErrorAplicacion> {
-        let perfil = self
-            .perfiles
-            .perfil(s.usuario)
-            .await?
-            .ok_or(ErrorAplicacion::PerfilNoEncontrado)?;
-        if !perfil.calendario().es_dia_de_pago(s.pago) {
-            return Err(ErrorAplicacion::NoEsDiaDePago(s.pago));
-        }
-        let ingresos = lineas(s.ingresos)?;
-        let pagos = lineas(s.pagos)?;
-        let quincena = match self.quincenas.de(s.usuario, s.pago).await? {
-            Some(anterior) => anterior.con_presupuesto(ingresos, pagos),
-            None => Quincena::new(s.usuario, s.pago, ingresos, pagos),
-        };
-        self.quincenas.guardar(&quincena).await?;
-        Ok(ResumenQuincena::de(quincena))
-    }
-}
-
-/// Caso de uso: ver una quincena.
-#[derive(Debug)]
-pub struct ConsultarQuincena<'a, P, Q, R> {
-    perfiles: &'a P,
-    quincenas: &'a Q,
-    reloj: &'a R,
-}
-
-impl<'a, P, Q, R> ConsultarQuincena<'a, P, Q, R>
-where
-    P: RepositorioPerfiles,
-    Q: RepositorioQuincenas,
-    R: Reloj,
-{
-    /// Arma el caso de uso.
-    pub const fn new(perfiles: &'a P, quincenas: &'a Q, reloj: &'a R) -> Self {
-        Self {
-            perfiles,
-            quincenas,
-            reloj,
-        }
-    }
-
-    /// El último pago recibido según el calendario del usuario.
-    async fn pago_en_curso(&self, usuario: UsuarioId) -> Result<NaiveDate, ErrorAplicacion> {
-        let perfil = self
-            .perfiles
-            .perfil(usuario)
-            .await?
-            .ok_or(ErrorAplicacion::PerfilNoEncontrado)?;
-        perfil
-            .calendario()
-            .ultimo_pago(self.reloj.hoy())
-            .map(Corte::pago)
-            .ok_or(ErrorAplicacion::FueraDeCalendario)
-    }
-
-    /// La quincena del pago pedido o, sin pago, la que se está gastando hoy
-    /// (la del último pago, C4). `None` si todavía no tiene presupuesto.
-    pub async fn ejecutar(
-        &self,
-        usuario: UsuarioId,
-        pago: Option<NaiveDate>,
-    ) -> Result<Option<ResumenQuincena>, ErrorAplicacion> {
-        let pago = if let Some(p) = pago {
-            p
-        } else {
-            self.pago_en_curso(usuario).await?
-        };
-        Ok(self
-            .quincenas
-            .de(usuario, pago)
-            .await?
-            .map(ResumenQuincena::de))
-    }
 }
 
 /// Marcar o desmarcar una línea.
@@ -190,20 +78,162 @@ pub struct SolicitudMarca {
     pub hecho: bool,
 }
 
-/// Caso de uso: marcar una línea como pagada o recibida.
-#[derive(Debug)]
-pub struct MarcarLinea<'a, Q> {
-    quincenas: &'a Q,
+fn lineas(pedidas: Vec<LineaPedida>) -> Result<Vec<Linea>, ErrorAplicacion> {
+    pedidas
+        .into_iter()
+        .map(|l| {
+            Ok(Linea::new(
+                Concepto::new(&l.concepto)?,
+                Colones::new(l.monto),
+            )?)
+        })
+        .collect()
 }
 
-impl<'a, Q: RepositorioQuincenas> MarcarLinea<'a, Q> {
-    /// Arma el caso de uso.
-    pub const fn new(quincenas: &'a Q) -> Self {
-        Self { quincenas }
+/// Las fuentes que necesitan todos los casos de uso de quincenas.
+#[derive(Debug)]
+pub struct Presupuestos<'a, P, Q, E, R> {
+    perfiles: &'a P,
+    quincenas: &'a Q,
+    extras: &'a E,
+    reloj: &'a R,
+}
+
+/// Lo que se lee una vez por petición para resumir quincenas.
+struct Datos {
+    perfil: Perfil,
+    extras: Vec<Extra>,
+    hoy: NaiveDate,
+}
+
+impl Datos {
+    /// Resume una quincena: el dominio calcula lo automático y el balance.
+    fn resumir(&self, quincena: Quincena, presupuestada: bool) -> ResumenQuincena {
+        let automaticos = IngresosAutomaticos::de(
+            self.perfil.salarial(),
+            self.perfil.calendario(),
+            &self.extras,
+            quincena.pago(),
+            self.hoy,
+        );
+        ResumenQuincena {
+            balance: quincena.balance(&automaticos),
+            avance: quincena.avance(),
+            automaticos,
+            presupuestada,
+            quincena,
+        }
+    }
+}
+
+impl<'a, P, Q, E, R> Presupuestos<'a, P, Q, E, R>
+where
+    P: RepositorioPerfiles,
+    Q: RepositorioQuincenas,
+    E: RepositorioExtras,
+    R: Reloj,
+{
+    /// Arma los casos de uso.
+    pub const fn new(perfiles: &'a P, quincenas: &'a Q, extras: &'a E, reloj: &'a R) -> Self {
+        Self {
+            perfiles,
+            quincenas,
+            extras,
+            reloj,
+        }
     }
 
-    /// Marca la línea y devuelve la quincena actualizada.
-    pub async fn ejecutar(&self, s: SolicitudMarca) -> Result<ResumenQuincena, ErrorAplicacion> {
+    async fn datos(&self, usuario: UsuarioId) -> Result<Datos, ErrorAplicacion> {
+        let perfil = self
+            .perfiles
+            .perfil(usuario)
+            .await?
+            .ok_or(ErrorAplicacion::PerfilNoEncontrado)?;
+        Ok(Datos {
+            perfil,
+            extras: self.extras.de_usuario(usuario).await?,
+            hoy: self.reloj.hoy(),
+        })
+    }
+
+    /// La quincena guardada o, si no tiene presupuesto, una vacía.
+    async fn quincena(
+        &self,
+        d: &Datos,
+        usuario: UsuarioId,
+        pago: NaiveDate,
+    ) -> Result<ResumenQuincena, ErrorAplicacion> {
+        Ok(self.quincenas.de(usuario, pago).await?.map_or_else(
+            || d.resumir(Quincena::new(usuario, pago, vec![], vec![]), false),
+            |q| d.resumir(q, true),
+        ))
+    }
+
+    /// La quincena del pago pedido o, sin pago, la que se está gastando hoy
+    /// (la del último pago, C4). Siempre trae lo que entra solo, aunque no
+    /// tenga presupuesto; el pago tiene que estar en el calendario (Q5).
+    pub async fn consultar(
+        &self,
+        usuario: UsuarioId,
+        pago: Option<NaiveDate>,
+    ) -> Result<ResumenQuincena, ErrorAplicacion> {
+        let d = self.datos(usuario).await?;
+        let calendario = d.perfil.calendario();
+        let pago = match pago {
+            Some(p) if calendario.es_dia_de_pago(p) => p,
+            Some(p) => return Err(ErrorAplicacion::NoEsDiaDePago(p)),
+            None => calendario
+                .ultimo_pago(d.hoy)
+                .map(Corte::pago)
+                .ok_or(ErrorAplicacion::FueraDeCalendario)?,
+        };
+        self.quincena(&d, usuario, pago).await
+    }
+
+    /// Las quincenas de un mes (C6) con su suma. Sin mes, el de hoy.
+    pub async fn mes(
+        &self,
+        usuario: UsuarioId,
+        mes: Option<(i32, u32)>,
+    ) -> Result<ResumenMes, ErrorAplicacion> {
+        let d = self.datos(usuario).await?;
+        let (anio, mes) = mes.unwrap_or_else(|| (d.hoy.year(), d.hoy.month()));
+        let mut quincenas = Vec::new();
+        for pago in d.perfil.calendario().pagos_del_mes(anio, mes) {
+            quincenas.push(self.quincena(&d, usuario, pago).await?);
+        }
+        Ok(ResumenMes {
+            anio,
+            mes,
+            balance: quincenas.iter().map(|q| q.balance).sum(),
+            quincenas,
+        })
+    }
+
+    /// Guarda (o rehace) el presupuesto. El pago tiene que estar en el
+    /// calendario (Q5). Si ya había presupuesto se reemplaza conservando lo
+    /// marcado (Q4).
+    pub async fn guardar(
+        &self,
+        s: SolicitudPresupuesto,
+    ) -> Result<ResumenQuincena, ErrorAplicacion> {
+        let d = self.datos(s.usuario).await?;
+        if !d.perfil.calendario().es_dia_de_pago(s.pago) {
+            return Err(ErrorAplicacion::NoEsDiaDePago(s.pago));
+        }
+        let ingresos = lineas(s.ingresos)?;
+        let pagos = lineas(s.pagos)?;
+        let quincena = match self.quincenas.de(s.usuario, s.pago).await? {
+            Some(anterior) => anterior.con_presupuesto(ingresos, pagos),
+            None => Quincena::new(s.usuario, s.pago, ingresos, pagos),
+        };
+        self.quincenas.guardar(&quincena).await?;
+        Ok(d.resumir(quincena, true))
+    }
+
+    /// Marca una línea como pagada o recibida y devuelve la quincena.
+    pub async fn marcar(&self, s: SolicitudMarca) -> Result<ResumenQuincena, ErrorAplicacion> {
+        let d = self.datos(s.usuario).await?;
         let mut quincena = self
             .quincenas
             .de(s.usuario, s.pago)
@@ -211,6 +241,6 @@ impl<'a, Q: RepositorioQuincenas> MarcarLinea<'a, Q> {
             .ok_or(ErrorAplicacion::QuincenaNoEncontrada(s.pago))?;
         quincena.marcar(s.lado, s.indice, s.hecho)?;
         self.quincenas.guardar(&quincena).await?;
-        Ok(ResumenQuincena::de(quincena))
+        Ok(d.resumir(quincena, true))
     }
 }

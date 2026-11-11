@@ -23,13 +23,13 @@
     <a class="enlace" routerLink="/quincena">
       @if (q.estado === 'cargando') {
         <fz-esqueleto alto="calc(var(--alto-renglon) * 2)" />
-      } @else if (q.estado === 'falla' && q.codigo === 'SIN_PRESUPUESTO') {
-        <fz-tarjeta clave="Quincena"
-                    nota="Todavía no armaste el presupuesto de esta quincena. Tocá para armarlo." />
       } @else if (q.estado === 'falla') {
         <fz-tarjeta clave="Quincena" [tenida]="true" tono="error">
           <p class="falla" role="alert">{{ q.mensaje }}</p>
         </fz-tarjeta>
+      } @else if (!q.valor.presupuestada) {
+        <fz-tarjeta [clave]="'Quincena del ' + (q.valor.pago | fechaCorta)" [monto]="q.valor.total_ingresos"
+                    nota="Entra con el salario y las extras. Todavía no armaste el presupuesto: tocá para armarlo." />
       } @else {
         <fz-tarjeta [clave]="'Quincena del ' + (q.valor.pago | fechaCorta)"
                     [monto]="q.valor.sobra" [tenida]="q.valor.sobra < 0" tono="error"

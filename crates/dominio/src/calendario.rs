@@ -5,7 +5,7 @@
 //! reportar y una fecha de pago. Los cortes cambian de quincena en quincena,
 //! así que vienen del calendario oficial y no de una regla fija.
 
-use chrono::NaiveDate;
+use chrono::{Datelike, NaiveDate};
 use thiserror::Error;
 
 /// Un corte: lo trabajado entre `inicio` y `fin` (incluidos) se paga en `pago`.
@@ -157,6 +157,16 @@ impl CalendarioCortes {
         self.cortes.iter().any(|c| c.pago == fecha)
     }
 
+    /// Los días de pago que caen en un mes, en orden (C6): las quincenas de
+    /// ese mes. Vacío si el mes no existe o el calendario no llega.
+    pub fn pagos_del_mes(&self, anio: i32, mes: u32) -> Vec<NaiveDate> {
+        self.cortes
+            .iter()
+            .map(|c| c.pago)
+            .filter(|p| p.year() == anio && p.month() == mes)
+            .collect()
+    }
+
     /// Los cortes, ordenados.
     pub fn cortes(&self) -> &[Corte] {
         &self.cortes
@@ -212,6 +222,26 @@ mod tests {
             .unwrap(),
         ])
         .unwrap()
+    }
+
+    #[test]
+    fn las_quincenas_de_un_mes() {
+        let cal = fin_de_2026();
+        assert_eq!(
+            cal.pagos_del_mes(2026, 11),
+            vec![f(2026, 11, 13), f(2026, 11, 30)],
+            "noviembre: Q1 el 13 y Q2 el 30"
+        );
+        assert_eq!(
+            cal.pagos_del_mes(2026, 12),
+            vec![f(2026, 12, 15), f(2026, 12, 30)],
+            "diciembre"
+        );
+        assert!(
+            cal.pagos_del_mes(2027, 1).is_empty(),
+            "fuera del calendario"
+        );
+        assert!(cal.pagos_del_mes(2026, 13).is_empty(), "mes que no existe");
     }
 
     #[test]

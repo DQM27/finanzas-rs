@@ -73,15 +73,47 @@ export interface Linea {
   hecho: boolean;
 }
 
+/** Lo que entra solo en una quincena (Q7): no se escribe ni se marca. */
+export interface Automaticos {
+  salario: number;
+  extras: number;
+  /** `true` desde el día de pago. */
+  llegaron: boolean;
+}
+
 export interface Quincena {
   pago: string;
+  /** `false` si todavía no se le armó presupuesto. */
+  presupuestada: boolean;
+  automaticos: Automaticos;
+  /** Los otros ingresos, escritos a mano. */
   ingresos: Linea[];
   pagos: Linea[];
+  otros_ingresos: number;
   total_ingresos: number;
   total_pagos: number;
   sobra: number;
   falta_por_pagar: number;
   avance: { hechos: number; total: number };
+}
+
+/** Los totales de un mes. */
+export interface Balance {
+  salario: number;
+  extras: number;
+  otros_ingresos: number;
+  total_ingresos: number;
+  total_pagos: number;
+  sobra: number;
+  falta_por_pagar: number;
+}
+
+/** `GET /meses/{AAAA-MM}`: las quincenas cuyo pago cae en el mes. */
+export interface Mes {
+  /** `AAAA-MM`. */
+  mes: string;
+  quincenas: Quincena[];
+  balance: Balance;
 }
 
 export interface Tarifas {

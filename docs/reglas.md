@@ -33,6 +33,7 @@ Estados: ✅ implementada y probada · 🕓 acordada, falta implementar.
 | C3 | Los cortes son seguidos: cada uno empieza el día después del anterior, sin huecos ni traslapes. | `CalendarioCortes::new` | ✅ |
 | C4 | El periodo de gasto va del último día de pago (incluido) al día antes del siguiente. | `CalendarioCortes::periodo_de_gasto` | ✅ |
 | C5 | Pagos estimados: el 15 y el 30 (o el último día del mes si es antes); si cae en fin de semana o feriado, el día hábil anterior. | — | 🕓 |
+| C6 | Las quincenas de un mes son las de los días de pago que caen en ese mes (Q1 y Q2), en orden. | `CalendarioCortes::pagos_del_mes` | ✅ |
 
 ## E · Extras
 
@@ -72,12 +73,14 @@ Estados: ✅ implementada y probada · 🕓 acordada, falta implementar.
 
 | Código | Regla | Dónde | Estado |
 |---|---|---|---|
-| Q1 | Sobra = total de ingresos − total de pagos. | `Quincena::sobra` | ✅ |
-| Q2 | Falta por pagar = suma de los pagos no marcados. | `Quincena::falta_por_pagar` | ✅ |
+| Q1 | Sobra = total de ingresos (salario + extras + otros ingresos) − total de pagos. | `Balance::sobra` | ✅ |
+| Q2 | Falta por pagar = suma de los pagos no marcados. | `Balance::falta_por_pagar` | ✅ |
 | Q3 | Ningún monto presupuestado es negativo. | `Linea::new` | ✅ |
 | Q4 | Rehacer el presupuesto no borra lo marcado: una línea nueva hereda la marca de la anterior del mismo lado y concepto (en orden si se repite). | `Quincena::con_presupuesto` | ✅ |
 | Q5 | Cada quincena es de un usuario y de un día de pago de su calendario; un día que no es de pago no lleva presupuesto. | `CalendarioCortes::es_dia_de_pago` | ✅ |
 | Q6 | La quincena en curso es la del último pago recibido (C4). | `CalendarioCortes::ultimo_pago`, API `/cortes/hoy` | ✅ |
+| Q7 | El salario neto (P) y las extras de ese pago (E4) entran solos en la quincena, sin escribirlos ni marcarlos; cuentan como llegados desde el día de pago. A mano sólo van los otros ingresos. Una quincena sin presupuesto igual muestra lo que entra solo. | `IngresosAutomaticos::de`, `Quincena::balance` | ✅ |
+| Q8 | El mes suma los balances de sus quincenas (C6). | `impl Sum for Balance`, API `/meses/{AAAA-MM}` | ✅ |
 
 ## G · Gastos puntuales
 

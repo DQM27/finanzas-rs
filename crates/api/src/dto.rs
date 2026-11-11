@@ -7,7 +7,7 @@ use finanzas_aplicacion::casos_de_uso::consultar_caja_chica::ResumenCaja;
 use finanzas_aplicacion::casos_de_uso::cortes::CortesHoy;
 use finanzas_aplicacion::casos_de_uso::fondo::{Deposito, RetiroHecho};
 use finanzas_aplicacion::casos_de_uso::perfil::{CortePedido, ResumenPerfil};
-use finanzas_aplicacion::casos_de_uso::quincena::{LineaPedida, ResumenQuincena};
+use finanzas_aplicacion::casos_de_uso::quincena::{LineaPedida, ResumenMes, ResumenQuincena};
 use finanzas_aplicacion::casos_de_uso::registrar_extra::ExtraRegistrada;
 use finanzas_aplicacion::casos_de_uso::registrar_gasto::GastoRegistrado;
 use finanzas_dominio::caja_chica::NivelCaja;
@@ -17,7 +17,7 @@ use finanzas_dominio::extra::TipoExtra;
 use finanzas_dominio::fondo::{NivelEmergencia, PlanReposicion};
 use finanzas_dominio::gasto::{Categoria, Gasto, Origen};
 use finanzas_dominio::movimientos_fondo::{EstadoFondo, Movimiento, MovimientoFondo};
-use finanzas_dominio::quincena::{Lado, Linea};
+use finanzas_dominio::quincena::{Balance, Lado, Linea};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -474,12 +474,55 @@ pub struct AvanceDto {
     pub total: usize,
 }
 
+/// Lo que entra solo en una quincena (Q7).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct AutomaticosDto {
+    /// Salario neto.
+    pub salario: i64,
+    /// Neto de las extras que se pagan ese día (E4).
+    pub extras: i64,
+    /// `true` si el pago ya llegó.
+    pub llegaron: bool,
+}
+
+/// Los totales de una quincena o de un mes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct BalanceDto {
+    pub salario: i64,
+    pub extras: i64,
+    pub otros_ingresos: i64,
+    pub total_ingresos: i64,
+    pub total_pagos: i64,
+    pub sobra: i64,
+    pub falta_por_pagar: i64,
+}
+
+impl From<Balance> for BalanceDto {
+    fn from(b: Balance) -> Self {
+        Self {
+            salario: b.salario().valor(),
+            extras: b.extras().valor(),
+            otros_ingresos: b.otros_ingresos().valor(),
+            total_ingresos: b.total_ingresos().valor(),
+            total_pagos: b.total_pagos().valor(),
+            sobra: b.sobra().valor(),
+            falta_por_pagar: b.falta_por_pagar().valor(),
+        }
+    }
+}
+
 /// Una quincena con sus números.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct QuincenaDto {
     pub pago: NaiveDate,
+    /// `false` si todavía no se le armó presupuesto.
+    pub presupuestada: bool,
+    pub automaticos: AutomaticosDto,
+    /// Los otros ingresos, escritos a mano.
     pub ingresos: Vec<LineaDto>,
     pub pagos: Vec<LineaDto>,
+    /// Suma de los otros ingresos.
+    pub otros_ingresos: i64,
     pub total_ingresos: i64,
     pub total_pagos: i64,
     pub sobra: i64,
@@ -491,16 +534,42 @@ impl From<ResumenQuincena> for QuincenaDto {
     fn from(r: ResumenQuincena) -> Self {
         Self {
             pago: r.quincena.pago(),
+            presupuestada: r.presupuestada,
+            automaticos: AutomaticosDto {
+                salario: r.automaticos.salario().valor(),
+                extras: r.automaticos.extras().valor(),
+                llegaron: r.automaticos.llegaron(),
+            },
             ingresos: r.quincena.ingresos().iter().map(LineaDto::from).collect(),
             pagos: r.quincena.pagos().iter().map(LineaDto::from).collect(),
-            total_ingresos: r.total_ingresos.valor(),
-            total_pagos: r.total_pagos.valor(),
-            sobra: r.sobra.valor(),
-            falta_por_pagar: r.falta_por_pagar.valor(),
+            otros_ingresos: r.balance.otros_ingresos().valor(),
+            total_ingresos: r.balance.total_ingresos().valor(),
+            total_pagos: r.balance.total_pagos().valor(),
+            sobra: r.balance.sobra().valor(),
+            falta_por_pagar: r.balance.falta_por_pagar().valor(),
             avance: AvanceDto {
                 hechos: r.avance.0,
                 total: r.avance.1,
             },
+        }
+    }
+}
+
+/// Un mes: sus quincenas y la suma.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct MesDto {
+    /// `AAAA-MM`.
+    pub mes: String,
+    pub quincenas: Vec<QuincenaDto>,
+    pub balance: BalanceDto,
+}
+
+impl From<ResumenMes> for MesDto {
+    fn from(r: ResumenMes) -> Self {
+        Self {
+            mes: format!("{:04}-{:02}", r.anio, r.mes),
+            quincenas: r.quincenas.into_iter().map(QuincenaDto::from).collect(),
+            balance: r.balance.into(),
         }
     }
 }

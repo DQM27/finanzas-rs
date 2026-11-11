@@ -14,7 +14,6 @@ pub enum ErrorApi {
     JsonInvalido(String),
     RutaInexistente,
     MetodoNoPermitido,
-    SinPresupuesto,
     Interno(String),
 }
 
@@ -43,11 +42,6 @@ impl ErrorApi {
                 405,
                 "METODO_NO_PERMITIDO",
                 "esa ruta no admite ese método".to_owned(),
-            ),
-            Self::SinPresupuesto => (
-                404,
-                "SIN_PRESUPUESTO",
-                "esa quincena todavía no tiene presupuesto".to_owned(),
             ),
             Self::Interno(_) => (500, "ERROR_INTERNO", MENSAJE_INTERNO.to_owned()),
             Self::Aplicacion(e) => {

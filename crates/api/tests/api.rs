@@ -245,7 +245,18 @@ mod tests {
     fn la_quincena_por_la_api() {
         let m = mundo();
         let (estado, r) = pedir(&m, DANIEL, Metodo::Get, "/quincenas/actual", None);
-        assert_eq!((estado, codigo(&r)), (404, "SIN_PRESUPUESTO"), "{r}");
+        assert_eq!(estado, 200, "sin presupuesto igual se ve: {r}");
+        assert_eq!(r["presupuestada"], false, "{r}");
+        assert_eq!(
+            r["automaticos"]["salario"], 232_225,
+            "el salario entra solo"
+        );
+        let entra_solo = r["sobra"].as_i64().unwrap();
+        assert_eq!(
+            entra_solo,
+            232_225 + r["automaticos"]["extras"].as_i64().unwrap(),
+            "salario + extras del pago"
+        );
 
         let (estado, q) = pedir(
             &m,
@@ -253,7 +264,7 @@ mod tests {
             Metodo::Put,
             "/quincenas/2026-11-13",
             Some(json!({
-                "ingresos": [{ "concepto": "salario base", "monto": 232_225 }],
+                "ingresos": [{ "concepto": "papá", "monto": 65_000 }],
                 "pagos": [
                     { "concepto": "moto", "monto": 104_000 },
                     { "concepto": "comida", "monto": 100_000 }
@@ -261,7 +272,13 @@ mod tests {
             })),
         );
         assert_eq!(estado, 200, "{q}");
-        assert_eq!(q["sobra"], 28_225, "232 225 − 204 000");
+        assert_eq!(q["presupuestada"], true, "{q}");
+        assert_eq!(q["otros_ingresos"], 65_000, "{q}");
+        assert_eq!(
+            q["sobra"],
+            entra_solo + 65_000 - 204_000,
+            "lo automático + papá − pagos"
+        );
 
         let (estado, q) = pedir(
             &m,
@@ -289,6 +306,35 @@ mod tests {
             (422, "DATOS_INVALIDOS"),
             "no es pago: {r}"
         );
+    }
+
+    #[test]
+    fn el_mes_por_la_api() {
+        let m = mundo();
+        let (estado, mes) = pedir(&m, DANIEL, Metodo::Get, "/meses/2026-11", None);
+        assert_eq!(estado, 200, "{mes}");
+        assert_eq!(mes["mes"], "2026-11", "{mes}");
+        let pagos: Vec<&str> = mes["quincenas"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|q| q["pago"].as_str().unwrap())
+            .collect();
+        assert_eq!(pagos, ["2026-11-13", "2026-11-30"], "Q1 y Q2");
+        assert_eq!(mes["balance"]["salario"], 464_450, "dos salarios");
+
+        let (_, actual) = pedir(&m, DANIEL, Metodo::Get, "/meses/actual", None);
+        assert_eq!(actual, mes, "hoy es noviembre");
+        for malo in ["/meses/2026-13", "/meses/2026-1", "/meses/noviembre"] {
+            let (estado, r) = pedir(&m, DANIEL, Metodo::Get, malo, None);
+            assert_eq!(
+                (estado, codigo(&r)),
+                (404, "RUTA_INEXISTENTE"),
+                "{malo}: {r}"
+            );
+        }
+        let (estado, r) = pedir(&m, DANIEL, Metodo::Delete, "/meses/actual", None);
+        assert_eq!((estado, codigo(&r)), (405, "METODO_NO_PERMITIDO"), "{r}");
     }
 
     #[test]

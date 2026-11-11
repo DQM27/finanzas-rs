@@ -93,43 +93,7 @@ p {
   background: var(--pildora);
 }
 
-// Lista de verificación.
-// El botón es el área tocable (44 px); adentro va el círculo de 24 px. El
-// margen negativo lo deja ocupar el lugar de un ícono de renglón (30 px).
-.marca {
-  display: inline-grid;
-  flex: none;
-  place-items: center;
-  width: var(--toque);
-  height: var(--toque);
-  margin: calc((var(--toque) - var(--icono-renglon)) / -2);
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.circulo {
-  display: inline-grid;
-  place-items: center;
-  width: var(--marca);
-  height: var(--marca);
-  border: var(--linea) solid var(--borde);
-  border-radius: 50%;
-  color: var(--sobre);
-  font-size: var(--margen);
-  transition: background var(--rapido) var(--curva);
-}
-
-.marca[aria-checked='true'] .circulo {
-  border-color: var(--exito);
-  background: var(--exito);
-}
-
-.marca:disabled {
-  opacity: 0.5;
-}
-
+// Lista de verificación (la casilla es `fz-casilla`).
 .hecho .concepto-linea,
 .hecho .monto-linea {
   color: var(--texto-2);
@@ -138,4 +102,13 @@ p {
 
 .pendiente {
   color: var(--error);
+}
+
+// Lo que entra solo (salario y extras): no se marca, se ve si ya llegó.
+.solo {
+  color: var(--texto-2);
+}
+
+.automatico.hecho .solo {
+  color: var(--exito);
 }

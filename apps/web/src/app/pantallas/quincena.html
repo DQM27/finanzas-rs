@@ -23,7 +23,8 @@
           <p class="subtitulo">Presupuesto del pago del {{ p | fechaCorta }}</p>
         }
         @for (lista of listas; track lista) {
-          <fz-grupo [titulo]="lista === 'ingresos' ? 'Ingresos' : 'Pagos'">
+          <fz-grupo [titulo]="lista === 'ingresos' ? 'Otros ingresos' : 'Pagos'"
+                    [nota]="lista === 'ingresos' ? 'El salario y las extras entran solos.' : ''">
             @for (f of (lista === 'ingresos' ? ingresos() : pagos()); track $index; let i = $index) {
               <fz-renglon>
                 <input class="campo concepto" [attr.aria-label]="'Concepto ' + (i + 1)"
@@ -40,7 +41,7 @@
               </fz-renglon>
             }
             <fz-renglon [interactivo]="true" (click)="agregar(lista)">
-              <span class="agregar">+ Agregar {{ lista === 'ingresos' ? 'ingreso' : 'pago' }}</span>
+              <span class="agregar">+ Agregar {{ lista === 'ingresos' ? 'otro ingreso' : 'pago' }}</span>
             </fz-renglon>
           </fz-grupo>
         }
@@ -81,20 +82,24 @@
         { lado: 'PAGO', titulo: 'Pagos · ' + q.valor.avance.hechos + ' de ' + q.valor.avance.total, lineas: q.valor.pagos },
         { lado: 'INGRESO', titulo: 'Ingresos', lineas: q.valor.ingresos }
       ]; track bloque.lado) {
-        @if (bloque.lineas.length) {
+        @if (bloque.lineas.length || bloque.lado === 'INGRESO') {
           <fz-grupo [titulo]="bloque.titulo">
+            @if (bloque.lado === 'INGRESO') {
+              @let a = q.valor.automaticos;
+              @for (auto of [{ concepto: 'Salario', monto: a.salario }, { concepto: 'Extras del pago', monto: a.extras }]; track auto.concepto) {
+                <fz-renglon [conIcono]="true" class="automatico" [class.hecho]="a.llegaron">
+                  <fz-icono slot="icono" class="solo" [nombre]="a.llegaron ? 'check' : 'extras'" />
+                  <span class="linea-1 concepto-linea">{{ auto.concepto }}</span>
+                  <span class="linea-2">{{ a.llegaron ? 'Llegó' : 'Entra' }} el {{ q.valor.pago | fechaCorta }}</span>
+                  <span slot="valor" class="cifras monto-linea">{{ auto.monto | colones }}</span>
+                </fz-renglon>
+              }
+            }
             @for (l of bloque.lineas; track $index; let i = $index) {
               <fz-renglon [conIcono]="true" [class.hecho]="l.hecho">
-                <button slot="icono" type="button" class="marca" role="checkbox"
-                        [attr.aria-checked]="l.hecho" [attr.aria-label]="l.concepto"
+                <button fz-casilla slot="icono" type="button" [hecho]="l.hecho" [attr.aria-label]="l.concepto"
                         [disabled]="marcando() === bloque.lado + '-' + i"
-                        (click)="marcar($any(bloque.lado), i, l)">
-                  <span class="circulo">
-                    @if (l.hecho) {
-                      <fz-icono nombre="check" />
-                    }
-                  </span>
-                </button>
+                        (click)="marcar($any(bloque.lado), i, l)"></button>
                 <span class="linea-1 concepto-linea">{{ l.concepto }}</span>
                 <span slot="valor" class="cifras monto-linea"
                       [class.pendiente]="bloque.lado === 'PAGO' && !l.hecho">
