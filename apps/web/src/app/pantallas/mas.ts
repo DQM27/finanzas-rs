@@ -14,6 +14,9 @@ import { Renglon } from '../ui/renglon';
   template: `
     <main class="pantalla">
       <h1>Más</h1>
+      <fz-grupo titulo="Ajustes">
+        <fz-renglon [chevron]="true" (click)="ir('/configuracion')">Configuración</fz-renglon>
+      </fz-grupo>
       <fz-grupo titulo="Desarrollo">
         <fz-renglon [chevron]="true" (click)="ir('/muestrario')">Muestrario de componentes</fz-renglon>
       </fz-grupo>

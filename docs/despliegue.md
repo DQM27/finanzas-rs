@@ -162,5 +162,6 @@ RUSTUP_TOOLCHAIN=1.97.0-x86_64-pc-windows-gnu npx wrangler deploy
 - La pantalla de configuración que use `GET`/`PUT /api/perfil` (la ruta ya existe).
   El perfil de Daniel ya está cargado (11/11/2026), con el calendario oficial hasta
   febrero de 2027 y el estimado de marzo a diciembre de 2027.
-- La pantalla de Configuración de la PWA. Inicio, Anotar y Quincena ya están.
+- La versión de computadora de la PWA (barra lateral, tablas). Las pantallas del
+  celular (Inicio, Quincena, Anotar) y Configuración ya están.
 - Hacerla instalable: manifiesto e íconos.

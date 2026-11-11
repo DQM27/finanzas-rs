@@ -1,0 +1,138 @@
+<main class="pantalla">
+  <h1>Configuración</h1>
+
+  @let p = perfil();
+  @if (p.estado === 'cargando') {
+    <div class="pila">
+      <fz-esqueleto alto="calc(var(--alto-renglon) * 3)" />
+      <fz-esqueleto alto="calc(var(--alto-renglon) * 4)" />
+    </div>
+  } @else if (p.estado === 'falla') {
+    <fz-tarjeta clave="Configuración" [tenida]="true" tono="error">
+      <p class="falla" role="alert">{{ p.mensaje }}</p>
+    </fz-tarjeta>
+  } @else {
+    @if (borrador(); as b) {
+      <!-- Editor (sólo en la computadora) -->
+      <form (ngSubmit)="guardar()">
+        <fz-grupo titulo="Salario de la quincena">
+          @for (c of salario; track c[0]) {
+            <fz-renglon [etiqueta]="c[1]">
+              <input class="campo cifras" inputmode="numeric" placeholder="Requerido" autocomplete="off"
+                     [attr.aria-label]="c[1]" [attr.name]="c[0]"
+                     [value]="b[c[0]]" (input)="cambiar(c[0], $any($event.target).value)" />
+            </fz-renglon>
+          }
+          <fz-renglon etiqueta="Factor neto">
+            <input class="campo cifras" inputmode="decimal" placeholder="86,17" autocomplete="off"
+                   aria-label="Factor neto en porcentaje" name="factor_neto"
+                   [value]="b.factor_neto" (input)="cambiar('factor_neto', $any($event.target).value)" />
+            <span slot="valor" class="unidad">%</span>
+          </fz-renglon>
+        </fz-grupo>
+
+        <fz-grupo titulo="Tarifas de extra (bruto)">
+          @for (c of tarifas; track c[0]) {
+            <fz-renglon [etiqueta]="c[1]">
+              <input class="campo cifras" inputmode="numeric" placeholder="Requerido" autocomplete="off"
+                     [attr.aria-label]="'Tarifa ' + c[1]" [attr.name]="c[0]"
+                     [value]="b[c[0]]" (input)="cambiar(c[0], $any($event.target).value)" />
+            </fz-renglon>
+          }
+        </fz-grupo>
+
+        <fz-grupo titulo="Caja chica">
+          <fz-renglon etiqueta="Tope">
+            <input class="campo cifras" inputmode="numeric" placeholder="Requerido" autocomplete="off"
+                   aria-label="Tope de la caja chica" name="tope_caja_chica"
+                   [value]="b.tope_caja_chica" (input)="cambiar('tope_caja_chica', $any($event.target).value)" />
+          </fz-renglon>
+        </fz-grupo>
+
+        <fz-grupo titulo="Calendario de cortes"
+                  nota="Cada corte empieza el día después del anterior. Pago y reporte, del calendario oficial.">
+          <div class="tabla-cortes" role="table" aria-label="Cortes">
+            <div class="fila encabezados" role="row">
+              <span role="columnheader">Desde</span>
+              <span role="columnheader">Hasta</span>
+              <span role="columnheader">Reportar antes</span>
+              <span role="columnheader">Pago</span>
+              <span></span>
+            </div>
+            @for (c of b.cortes; track $index; let i = $index) {
+              <div class="fila" role="row">
+                <input type="date" class="fecha" [attr.aria-label]="'Corte ' + (i + 1) + ': desde'"
+                       [value]="c.inicio" (change)="cambiarCorte(i, 'inicio', $any($event.target).value)" />
+                <input type="date" class="fecha" [attr.aria-label]="'Corte ' + (i + 1) + ': hasta'"
+                       [value]="c.fin" (change)="cambiarCorte(i, 'fin', $any($event.target).value)" />
+                <input type="date" class="fecha" [attr.aria-label]="'Corte ' + (i + 1) + ': reportar antes'"
+                       [value]="c.reportar_antes" (change)="cambiarCorte(i, 'reportar_antes', $any($event.target).value)" />
+                <input type="date" class="fecha" [attr.aria-label]="'Corte ' + (i + 1) + ': pago'"
+                       [value]="c.pago" (change)="cambiarCorte(i, 'pago', $any($event.target).value)" />
+                <button type="button" class="quitar" [attr.aria-label]="'Quitar el corte ' + (i + 1)"
+                        (click)="quitarCorte(i)">
+                  <fz-icono nombre="quitar" />
+                </button>
+              </div>
+            }
+          </div>
+          <fz-renglon [interactivo]="true" (click)="agregarCorte()">
+            <span class="agregar">+ Agregar corte</span>
+          </fz-renglon>
+        </fz-grupo>
+
+        @if (falla(); as mensaje) {
+          <p class="falla nota-error" role="alert">{{ mensaje }}</p>
+        }
+        <div class="acciones">
+          <button fz-boton type="submit" [guardando]="guardando()">Guardar configuración</button>
+          <button type="button" class="secundario" (click)="cancelar()">Cancelar</button>
+        </div>
+      </form>
+    } @else {
+      <!-- Consulta -->
+      <fz-grupo titulo="Salario de la quincena">
+        <fz-renglon etiqueta="Salario base"><span class="cifras">{{ p.valor.salario_base | colones }}</span></fz-renglon>
+        <fz-renglon etiqueta="Factor neto"><span class="cifras">{{ porcentaje(p.valor.factor_neto) }}</span></fz-renglon>
+        <fz-renglon etiqueta="Rebajos fijos"><span class="cifras">{{ p.valor.rebajos | colones }}</span></fz-renglon>
+        <fz-renglon etiqueta="Salario neto"><strong class="cifras">{{ p.valor.salario_neto | colones }}</strong></fz-renglon>
+      </fz-grupo>
+
+      <fz-grupo titulo="Tarifas de extra (bruto)">
+        <fz-renglon etiqueta="Nocturna"><span class="cifras">{{ p.valor.tarifas.nocturna | colones }}</span></fz-renglon>
+        <fz-renglon etiqueta="Diurna"><span class="cifras">{{ p.valor.tarifas.diurna | colones }}</span></fz-renglon>
+        <fz-renglon etiqueta="Especial"><span class="cifras">{{ p.valor.tarifas.especial | colones }}</span></fz-renglon>
+        <fz-renglon etiqueta="Feriado"><span class="cifras">{{ p.valor.tarifas.feriado | colones }}</span></fz-renglon>
+      </fz-grupo>
+
+      <fz-grupo titulo="Caja chica">
+        <fz-renglon etiqueta="Tope"><span class="cifras">{{ p.valor.tope_caja_chica | colones }}</span></fz-renglon>
+      </fz-grupo>
+
+      <fz-grupo titulo="Calendario de cortes"
+                [nota]="p.valor.cubre_hasta ? 'Cubre hasta el pago del ' + (p.valor.cubre_hasta | fechaCorta) + '.' : ''">
+        @for (c of cortesVisibles(); track c.pago) {
+          <fz-renglon>
+            <span class="linea-1">Pago {{ c.pago | fechaCorta }}</span>
+            <span class="linea-2">
+              Trabajado {{ c.inicio | fechaCorta }} – {{ c.fin | fechaCorta }} · reportar antes del {{ c.reportar_antes | fechaCorta }}
+            </span>
+          </fz-renglon>
+        } @empty {
+          <fz-renglon><span class="vacio">No quedan cortes por venir.</span></fz-renglon>
+        }
+        @if (!todos()) {
+          <fz-renglon [interactivo]="true" (click)="todos.set(true)">
+            <span class="agregar">Ver los {{ p.valor.cortes.length }} cortes</span>
+          </fz-renglon>
+        }
+      </fz-grupo>
+
+      @if (nivel.computadora()) {
+        <button fz-boton type="button" (click)="editar(p.valor)">Editar configuración</button>
+      } @else {
+        <p class="consulta">Para cambiar la configuración, abrí la app en la computadora.</p>
+      }
+    }
+  }
+</main>

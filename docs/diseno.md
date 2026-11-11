@@ -230,5 +230,9 @@ librería). La página **Más → Muestrario** los muestra todos con datos de ej
 Las medidas internas de los componentes (tamaños de ícono, divisor, columna de
 etiqueta, ancho máximo, duraciones) también son tokens, en `tokens.scss`.
 
-Faltan `fz-barra-lateral`, `fz-tabla` y el cambio de nivel a 900 px, que llegan con
-la versión de computadora.
+El nivel lo decide un solo servicio, `Nivel` (`nucleo/nivel.ts`), con `matchMedia` a
+900 px, en lugar del `BreakpointObserver` del CDK: hace lo mismo sin sumar una
+dependencia. Configuración ya lo usa: en el celular es de consulta y en la computadora
+se edita.
+
+Faltan `fz-barra-lateral` y `fz-tabla`, que llegan con la versión de computadora.

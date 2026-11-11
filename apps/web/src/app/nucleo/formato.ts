@@ -15,6 +15,24 @@ export function leerMonto(texto: string): number | null {
   return digitos ? Number(digitos) : null;
 }
 
+/** Diezmilésimas como porcentaje: `8617` → `86,17 %`. Sólo enteros, sin redondeos. */
+export function porcentaje(diezmilesimas: number): string {
+  const entero = Math.trunc(diezmilesimas / 100);
+  const resto = String(diezmilesimas % 100).padStart(2, '0');
+  return `${entero},${resto} %`;
+}
+
+/**
+ * Un porcentaje escrito (`86,17`, `86.17 %`, `86,5`) en diezmilésimas, leído
+ * como texto para no pasar por decimales. Con más de dos decimales o sin
+ * número, `null`.
+ */
+export function leerPorcentaje(texto: string): number | null {
+  const m = /^\s*(\d{1,3})(?:[.,](\d{1,2}))?\s*%?\s*$/.exec(texto);
+  if (!m) return null;
+  return Number(m[1]) * 100 + Number((m[2] ?? '0').padEnd(2, '0'));
+}
+
 @Pipe({ name: 'colones' })
 export class ColonesPipe implements PipeTransform {
   transform(monto: number | null | undefined): string {

@@ -1,0 +1,100 @@
+// Sólo tokens (styles/tokens.scss).
+
+.pila {
+  display: grid;
+  gap: var(--espacio);
+}
+
+p {
+  margin: 0;
+}
+
+.falla {
+  margin-top: var(--chico);
+  color: var(--error);
+}
+
+.nota-error {
+  margin: 0 0 var(--espacio);
+  padding-inline: var(--margen);
+  font: var(--cuerpo-chico);
+  font-weight: 600;
+}
+
+.unidad,
+.consulta,
+.vacio {
+  color: var(--texto-2);
+}
+
+.consulta {
+  padding-inline: var(--margen);
+  font: var(--cuerpo-chico);
+}
+
+.agregar {
+  color: var(--acento);
+}
+
+.acciones {
+  display: grid;
+  gap: var(--espacio);
+}
+
+.secundario {
+  width: 100%;
+  min-height: var(--alto-boton);
+  border: 0;
+  border-radius: var(--radio-grupo);
+  background: transparent;
+  color: var(--acento);
+  font: var(--titulo-medio);
+  cursor: pointer;
+}
+
+.secundario:active {
+  background: var(--pildora);
+}
+
+// Calendario editable: una fila por corte, cuatro fechas y quitar.
+.tabla-cortes {
+  padding: var(--chico) var(--margen);
+  overflow-x: auto;
+}
+
+.fila {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) var(--toque);
+  gap: var(--chico);
+  align-items: center;
+  min-height: var(--toque);
+}
+
+.encabezados {
+  font: var(--etiqueta);
+  color: var(--texto-2);
+  text-transform: uppercase;
+}
+
+.fecha {
+  min-width: 0;
+  min-height: var(--toque);
+  padding: 0 var(--chico);
+  border: 0;
+  border-radius: var(--radio-icono);
+  background: var(--variante);
+}
+
+.quitar {
+  display: inline-grid;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-icono);
+  background: transparent;
+  color: var(--texto-2);
+  font-size: var(--icono-barra);
+  cursor: pointer;
+}
