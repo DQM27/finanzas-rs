@@ -21,6 +21,8 @@ Estados: ✅ implementada y probada · 🕓 acordada, falta implementar.
 | P2 | Salario neto de la quincena = salario base bruto × factor neto − rebajos fijos. | `PerfilSalarial::salario_neto_quincena` | ✅ |
 | P3 | Salario base > 0, factor neto ≤ 100 %, rebajos ≥ 0, tarifas > 0. | `PerfilSalarial::new`, `TarifasExtra::new` | ✅ |
 | P4 | Ningún número personal está fijo en el código: es configuración de cada usuario. | `perfil::Perfil` | ✅ |
+| P5 | Cada quien sólo lee y guarda su propio perfil: el dueño es siempre el usuario autenticado, nunca un dato que llegue en la petición. | `GuardarPerfil`, `ConsultarPerfil`, API `/perfil` | ✅ |
+| P6 | El perfil se guarda completo y entero válido (salario, tarifas, caja chica y calendario); si una pieza no cumple, no se guarda nada. | `GuardarPerfil` | ✅ |
 
 ## C · Calendario de cortes
 

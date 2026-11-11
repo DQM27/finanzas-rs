@@ -1,10 +1,13 @@
 //! Errores de los casos de uso.
 
 use chrono::NaiveDate;
+use finanzas_dominio::caja_chica::ErrorCajaChica;
+use finanzas_dominio::calendario::ErrorCalendario;
 use finanzas_dominio::extra::ErrorExtra;
 use finanzas_dominio::fondo::RechazoRetiro;
 use finanzas_dominio::gasto::ErrorGasto;
 use finanzas_dominio::movimientos_fondo::ErrorFondo;
+use finanzas_dominio::perfil::ErrorPerfil;
 use finanzas_dominio::quincena::ErrorQuincena;
 use finanzas_dominio::texto::ErrorConcepto;
 use thiserror::Error;
@@ -32,6 +35,15 @@ pub enum ErrorAplicacion {
     /// No hay nada con ese id para ese usuario.
     #[error("no se encontró lo que se quería deshacer")]
     NoEncontrado,
+    /// Los números del perfil no son válidos.
+    #[error(transparent)]
+    Perfil(#[from] ErrorPerfil),
+    /// El calendario de cortes no es válido.
+    #[error(transparent)]
+    Calendario(#[from] ErrorCalendario),
+    /// El tope de la caja chica no es válido.
+    #[error(transparent)]
+    CajaChica(#[from] ErrorCajaChica),
     /// La quincena no es válida.
     #[error(transparent)]
     Quincena(#[from] ErrorQuincena),

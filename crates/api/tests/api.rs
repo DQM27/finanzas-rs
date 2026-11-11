@@ -393,4 +393,99 @@ mod tests {
             "el detalle queda para el registro del servidor"
         );
     }
+
+    /// El JSON de `GET /perfil` sin lo calculado sirve como cuerpo de `PUT`.
+    fn como_pedido(mut perfil: Value) -> Value {
+        let o = perfil.as_object_mut().unwrap();
+        o.remove("salario_neto");
+        o.remove("cubre_hasta");
+        perfil
+    }
+
+    #[test]
+    fn el_perfil_se_lee_y_se_reemplaza() {
+        let m = mundo();
+        let (estado, perfil) = pedir(&m, DANIEL, Metodo::Get, "/perfil", None);
+        assert_eq!(estado, 200, "{perfil}");
+        assert_eq!(
+            perfil["salario_neto"], 232_225,
+            "P2 calculado por el dominio"
+        );
+        assert_eq!(perfil["factor_neto"], 8617, "diezmilésimas");
+        assert_eq!(perfil["tarifas"]["nocturna"], 25_800, "tarifa");
+        assert_eq!(
+            perfil["cubre_hasta"], "2026-11-30",
+            "último pago del calendario"
+        );
+
+        let mut pedido = como_pedido(perfil.clone());
+        pedido["tope_caja_chica"] = json!(6_000);
+        let (estado, nuevo) = pedir(&m, DANIEL, Metodo::Put, "/perfil", Some(pedido));
+        assert_eq!(estado, 200, "{nuevo}");
+        assert_eq!(nuevo["tope_caja_chica"], 6_000, "reemplazado");
+        let (_, caja) = pedir(&m, DANIEL, Metodo::Get, "/caja-chica", None);
+        assert_eq!(caja["queda"], 6_000, "la caja chica usa el tope nuevo");
+
+        let (estado, r) = pedir(&m, DANIEL, Metodo::Put, "/perfil", Some(perfil));
+        assert_eq!(
+            (estado, codigo(&r)),
+            (400, "JSON_INVALIDO"),
+            "lo calculado no se puede mandar: {r}"
+        );
+    }
+
+    #[test]
+    fn el_dominio_valida_el_perfil() {
+        let m = mundo();
+        let (_, perfil) = pedir(&m, DANIEL, Metodo::Get, "/perfil", None);
+        let base = como_pedido(perfil);
+
+        let mut factor = base.clone();
+        factor["factor_neto"] = json!(10_001);
+        let mut tarifa = base.clone();
+        tarifa["tarifas"]["feriado"] = json!(0);
+        let mut caja = base.clone();
+        caja["tope_caja_chica"] = json!(0);
+        let mut hueco = base.clone();
+        hueco["cortes"][1]["inicio"] = json!("2026-11-05");
+        let mut vacio = base.clone();
+        vacio["cortes"] = json!([]);
+        let mut invertido = base;
+        invertido["cortes"][0]["pago"] = json!("2026-11-01");
+
+        for (nombre, malo) in [
+            ("factor mayor a 100 %", factor),
+            ("tarifa en cero", tarifa),
+            ("caja chica en cero", caja),
+            ("cortes con hueco", hueco),
+            ("calendario vacío", vacio),
+            ("pago antes del reporte", invertido),
+        ] {
+            let (estado, r) = pedir(&m, DANIEL, Metodo::Put, "/perfil", Some(malo));
+            assert_eq!(
+                (estado, codigo(&r)),
+                (422, "DATOS_INVALIDOS"),
+                "{nombre}: {r}"
+            );
+        }
+        let (_, sigue) = pedir(&m, DANIEL, Metodo::Get, "/perfil", None);
+        assert_eq!(
+            sigue["tope_caja_chica"], 5_000,
+            "ningún intento malo lo cambió"
+        );
+    }
+
+    #[test]
+    fn cada_quien_guarda_su_perfil() {
+        let m = mundo();
+        let (_, perfil) = pedir(&m, DANIEL, Metodo::Get, "/perfil", None);
+        let mut ajeno = como_pedido(perfil);
+        ajeno["salario_base"] = json!(400_000);
+        let (estado, _) = pedir(&m, OTRO, Metodo::Put, "/perfil", Some(ajeno));
+        assert_eq!(estado, 200, "el otro crea el suyo");
+        let (_, mio) = pedir(&m, DANIEL, Metodo::Get, "/perfil", None);
+        assert_eq!(mio["salario_base"], 293_000, "el de Daniel no cambió (P5)");
+        let (_, suyo) = pedir(&m, OTRO, Metodo::Get, "/perfil", None);
+        assert_eq!(suyo["salario_base"], 400_000, "el del otro");
+    }
 }

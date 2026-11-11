@@ -10,6 +10,8 @@
 //!
 //! | Método | Ruta | Qué hace |
 //! |---|---|---|
+//! | `GET` | `/perfil` | El perfil propio |
+//! | `PUT` | `/perfil` | Reemplaza el perfil propio |
 //! | `GET` | `/caja-chica` | Caja chica del periodo |
 //! | `POST` | `/gastos` | Anota un gasto |
 //! | `DELETE` | `/gastos/{id}` | Deshace un gasto |
@@ -35,7 +37,7 @@ mod errores;
 use chrono::NaiveDate;
 use dto::{
     CajaDto, ExtraDto, FondoDto, GastoRegistradoDto, Marca, NuevaExtra, NuevoDeposito, NuevoGasto,
-    NuevoRetiro, Presupuesto, QuincenaDto, RetiroDto,
+    NuevoPerfil, NuevoRetiro, PerfilDto, Presupuesto, QuincenaDto, RetiroDto,
 };
 use errores::{ErrorApi, Resultado};
 use finanzas_aplicacion::casos_de_uso::consultar_caja_chica::ConsultarCajaChica;
@@ -43,6 +45,7 @@ use finanzas_aplicacion::casos_de_uso::deshacer::{Deshacer, QueDeshacer};
 use finanzas_aplicacion::casos_de_uso::fondo::{
     ConsultarFondo, DepositarEnFondo, SacarDelFondo, SolicitudDeposito, SolicitudSacar,
 };
+use finanzas_aplicacion::casos_de_uso::perfil::{ConsultarPerfil, GuardarPerfil, SolicitudPerfil};
 use finanzas_aplicacion::casos_de_uso::quincena::{
     ConsultarQuincena, GuardarPresupuesto, MarcarLinea, SolicitudMarca, SolicitudPresupuesto,
 };
@@ -167,6 +170,7 @@ fn fecha(texto: &str) -> Result<NaiveDate, ErrorApi> {
 async fn enrutar<C: Contexto>(ctx: &C, usuario: UsuarioId, p: Peticion<'_>) -> Resultado {
     let partes: Vec<&str> = p.ruta.trim_matches('/').split('/').collect();
     let respuesta = match partes.as_slice() {
+        ["perfil"] => perfil(ctx, usuario, &p).await,
         ["caja-chica" | "gastos" | "extras", ..] => registro(ctx, usuario, &p, &partes).await,
         ["fondo", ..] => fondo(ctx, usuario, &p, &partes).await,
         ["quincenas", ..] => quincenas(ctx, usuario, &p, &partes).await,
@@ -179,6 +183,38 @@ async fn enrutar<C: Contexto>(ctx: &C, usuario: UsuarioId, p: Peticion<'_>) -> R
             Err(ErrorApi::RutaInexistente)
         }
     })
+}
+
+/// El perfil propio. `None` si el método no es de aquí.
+async fn perfil<C: Contexto>(ctx: &C, usuario: UsuarioId, p: &Peticion<'_>) -> Option<Resultado> {
+    Some(match p.metodo {
+        Metodo::Get => ConsultarPerfil::new(ctx.perfiles())
+            .ejecutar(usuario)
+            .await
+            .map_err(ErrorApi::from)
+            .and_then(|r| json(200, &PerfilDto::from(r))),
+        Metodo::Put => guardar_perfil(ctx, usuario, p.cuerpo).await,
+        _ => return None,
+    })
+}
+
+async fn guardar_perfil<C: Contexto>(ctx: &C, usuario: UsuarioId, bytes: &[u8]) -> Resultado {
+    let n: NuevoPerfil = cuerpo(bytes)?;
+    let r = GuardarPerfil::new(ctx.perfiles())
+        .ejecutar(SolicitudPerfil {
+            usuario,
+            salario_base: n.salario_base,
+            factor_neto: n.factor_neto,
+            rebajos: n.rebajos,
+            nocturna: n.tarifas.nocturna,
+            diurna: n.tarifas.diurna,
+            especial: n.tarifas.especial,
+            feriado: n.tarifas.feriado,
+            tope_caja_chica: n.tope_caja_chica,
+            cortes: n.cortes.into_iter().map(Into::into).collect(),
+        })
+        .await?;
+    json(200, &PerfilDto::from(r))
 }
 
 /// Caja chica, gastos y extras. `None` si la ruta no es de aquí.
@@ -365,7 +401,7 @@ async fn marcar<C: Contexto>(ctx: &C, usuario: UsuarioId, texto: &str, bytes: &[
 fn es_ruta_conocida(partes: &[&str]) -> bool {
     matches!(
         partes,
-        ["caja-chica" | "gastos" | "extras" | "fondo" | "quincenas"]
+        ["perfil" | "caja-chica" | "gastos" | "extras" | "fondo" | "quincenas"]
             | ["gastos" | "extras" | "quincenas", _]
             | ["fondo", "retiros" | "depositos"]
             | ["fondo", "movimientos", _]

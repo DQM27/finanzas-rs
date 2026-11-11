@@ -5,10 +5,12 @@
 use chrono::NaiveDate;
 use finanzas_aplicacion::casos_de_uso::consultar_caja_chica::ResumenCaja;
 use finanzas_aplicacion::casos_de_uso::fondo::{Deposito, RetiroHecho};
+use finanzas_aplicacion::casos_de_uso::perfil::{CortePedido, ResumenPerfil};
 use finanzas_aplicacion::casos_de_uso::quincena::{LineaPedida, ResumenQuincena};
 use finanzas_aplicacion::casos_de_uso::registrar_extra::ExtraRegistrada;
 use finanzas_aplicacion::casos_de_uso::registrar_gasto::GastoRegistrado;
 use finanzas_dominio::caja_chica::NivelCaja;
+use finanzas_dominio::dinero::Colones;
 use finanzas_dominio::extra::TipoExtra;
 use finanzas_dominio::fondo::{NivelEmergencia, PlanReposicion};
 use finanzas_dominio::gasto::{Categoria, Gasto, Origen};
@@ -506,4 +508,96 @@ impl From<ResumenQuincena> for QuincenaDto {
 pub struct ErrorDto {
     pub codigo: String,
     pub mensaje: String,
+}
+
+// ------------------------------------------------------------------ perfil
+
+/// Tarifas brutas de cada tipo de extra.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TarifasDto {
+    pub nocturna: i64,
+    pub diurna: i64,
+    pub especial: i64,
+    pub feriado: i64,
+}
+
+/// Un corte del calendario.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CorteDto {
+    pub inicio: NaiveDate,
+    pub fin: NaiveDate,
+    pub reportar_antes: NaiveDate,
+    pub pago: NaiveDate,
+}
+
+impl From<CorteDto> for CortePedido {
+    fn from(c: CorteDto) -> Self {
+        Self {
+            inicio: c.inicio,
+            fin: c.fin,
+            reportar_antes: c.reportar_antes,
+            pago: c.pago,
+        }
+    }
+}
+
+/// `PUT /perfil`: el perfil completo. Reemplaza al anterior.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NuevoPerfil {
+    pub salario_base: i64,
+    /// Diezmilésimas: 86,17 % = 8617.
+    pub factor_neto: u32,
+    pub rebajos: i64,
+    pub tarifas: TarifasDto,
+    pub tope_caja_chica: i64,
+    pub cortes: Vec<CorteDto>,
+}
+
+/// El perfil con lo que se calcula de él.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PerfilDto {
+    pub salario_base: i64,
+    pub factor_neto: u32,
+    pub rebajos: i64,
+    pub salario_neto: i64,
+    pub tarifas: TarifasDto,
+    pub tope_caja_chica: i64,
+    pub cortes: Vec<CorteDto>,
+    /// Último día de pago que cubre el calendario.
+    pub cubre_hasta: Option<NaiveDate>,
+}
+
+impl From<ResumenPerfil> for PerfilDto {
+    fn from(r: ResumenPerfil) -> Self {
+        let p = &r.perfil;
+        let tarifa = |tipo| p.tarifas().tarifa(tipo).map_or(0, Colones::valor);
+        Self {
+            salario_base: p.salarial().salario_base_bruto().valor(),
+            factor_neto: p.salarial().factor_neto().diezmilesimas(),
+            rebajos: p.salarial().rebajos_fijos().valor(),
+            salario_neto: r.salario_neto.valor(),
+            tarifas: TarifasDto {
+                nocturna: tarifa(TipoExtra::Nocturna),
+                diurna: tarifa(TipoExtra::Diurna),
+                especial: tarifa(TipoExtra::Especial),
+                feriado: tarifa(TipoExtra::Feriado),
+            },
+            tope_caja_chica: p.caja_chica().tope().valor(),
+            cortes: p
+                .calendario()
+                .cortes()
+                .iter()
+                .map(|c| CorteDto {
+                    inicio: c.inicio(),
+                    fin: c.fin(),
+                    reportar_antes: c.reportar_antes(),
+                    pago: c.pago(),
+                })
+                .collect(),
+            cubre_hasta: r.cubre_hasta,
+        }
+    }
 }

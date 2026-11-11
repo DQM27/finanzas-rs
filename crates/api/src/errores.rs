@@ -62,7 +62,10 @@ impl ErrorApi {
                     | ErrorAplicacion::Concepto(_)
                     | ErrorAplicacion::Gasto(_)
                     | ErrorAplicacion::Extra(_)
-                    | ErrorAplicacion::Fondo(_) => (422, "DATOS_INVALIDOS"),
+                    | ErrorAplicacion::Fondo(_)
+                    | ErrorAplicacion::Perfil(_)
+                    | ErrorAplicacion::Calendario(_)
+                    | ErrorAplicacion::CajaChica(_) => (422, "DATOS_INVALIDOS"),
                     ErrorAplicacion::Repositorio(_) => (500, "ERROR_INTERNO"),
                 };
                 let mensaje = if estado == 500 {

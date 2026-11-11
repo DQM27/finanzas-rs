@@ -147,8 +147,8 @@ RUSTUP_TOOLCHAIN=1.97.0-x86_64-pc-windows-gnu npx wrangler deploy
 
 ## Qué queda pendiente
 
-- Una ruta `PUT /api/perfil` y su pantalla, para no cargar el perfil a mano. El de
-  Daniel ya está cargado (11/11/2026), con el calendario oficial hasta febrero de 2027
-  y el estimado de marzo a diciembre de 2027.
+- La pantalla de configuración que use `GET`/`PUT /api/perfil` (la ruta ya existe).
+  El perfil de Daniel ya está cargado (11/11/2026), con el calendario oficial hasta
+  febrero de 2027 y el estimado de marzo a diciembre de 2027.
 - Servir la PWA de Angular desde el mismo Worker, para que el inicio de sesión sea uno
   solo.
