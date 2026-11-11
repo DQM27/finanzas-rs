@@ -138,6 +138,16 @@ el dominio entero, así que la página y la API comparten una sola sesión.
 La CI comprueba en cada commit que el Rust compile a WebAssembly y que la PWA
 compile y pase sus pruebas.
 
+**Instalable y Access.** El navegador pide el manifiesto y los íconos por su cuenta, y
+Access bloquea lo que llega sin la sesión:
+
+- El manifiesto se enlaza con `crossorigin="use-credentials"`, para que vaya con la
+  sesión.
+- El ícono del iPhone (`apple-touch-icon`) va adentro de `index.html`, como `data:`.
+  Si fuera un archivo aparte, el iPhone no lo puede bajar y pone una letra en su lugar.
+- Los íconos salen de `apps/web/scripts/iconos.mjs` (`node scripts/iconos.mjs`), que
+  también actualiza el de `index.html`.
+
 En Windows, `worker-build` y las pruebas necesitan un enlazador para el host. Sin las
 Build Tools de Visual Studio, la toolchain `msvc` termina usando el `link.exe` de
 msys/Git y falla. Alternativa sin instalar nada más: la misma versión con la toolchain
@@ -164,4 +174,5 @@ RUSTUP_TOOLCHAIN=1.97.0-x86_64-pc-windows-gnu npx wrangler deploy
   febrero de 2027 y el estimado de marzo a diciembre de 2027.
 - La versión de computadora de la PWA (barra lateral, tablas). Las pantallas del
   celular (Inicio, Quincena, Anotar) y Configuración ya están.
-- Hacerla instalable: manifiesto e íconos.
+- Que funcione sin conexión (service worker) y pinte al instante los datos guardados
+  (docs/diseno.md §4, Carga). Ya es instalable.
