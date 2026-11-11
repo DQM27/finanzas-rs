@@ -1,0 +1,149 @@
+// La tabla ocupa todo el alto y ancho que le deja su pantalla. El aspecto de
+// la grilla es Quartz con los colores de la app; aquí vive la fila de
+// herramientas. Sólo tokens (styles/tokens.scss).
+
+:host {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.tabla {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--espacio);
+  min-width: 0;
+  min-height: 0;
+}
+
+.herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio);
+}
+
+.grupo {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio);
+  min-width: 0;
+}
+
+.buscador {
+  display: flex;
+  align-items: center;
+  gap: var(--chico);
+  width: var(--ancho-buscador);
+  max-width: 100%;
+  height: var(--alto-herramienta);
+  padding: 0 var(--espacio);
+  border-radius: var(--radio-icono);
+  background: var(--tarjeta);
+  color: var(--texto-2);
+
+  &:focus-within {
+    outline: var(--linea) solid var(--acento);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--texto);
+    font: var(--cuerpo-chico);
+  }
+}
+
+.conteo {
+  margin: 0;
+  font: var(--cuerpo-chico);
+  color: var(--texto-2);
+  white-space: nowrap;
+}
+
+// Botones de ícono pegados en una sola pieza.
+.segmentado {
+  display: inline-flex;
+  border-radius: var(--radio-icono);
+  background: var(--tarjeta);
+
+  button {
+    display: grid;
+    place-items: center;
+    width: var(--alto-herramienta);
+    height: var(--alto-herramienta);
+    padding: 0;
+    border: 0;
+    border-radius: var(--radio-icono);
+    background: transparent;
+    color: var(--texto);
+    font-size: var(--margen);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--pildora);
+    }
+
+    &[aria-pressed='true'] {
+      color: var(--acento);
+    }
+
+    &:focus-visible {
+      outline: var(--linea) solid var(--acento);
+    }
+  }
+}
+
+.menu-ancla {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + var(--chico));
+  right: 0;
+  display: grid;
+  min-width: calc(var(--ancho-lateral) * 0.8);
+  padding: var(--chico);
+  border-radius: var(--radio-grupo);
+  background: var(--tarjeta);
+  box-shadow: var(--sombra-segmento);
+
+  button {
+    display: flex;
+    gap: var(--espacio);
+    justify-content: flex-start;
+    width: auto;
+    padding: 0 var(--espacio);
+    font: var(--cuerpo-chico);
+    white-space: nowrap;
+  }
+}
+
+.casilla {
+  display: inline-grid;
+  place-items: center;
+  width: var(--margen);
+  height: var(--margen);
+  border: var(--linea) solid var(--borde);
+  border-radius: var(--chico);
+  color: var(--acento);
+}
+
+.rejilla {
+  flex: 1;
+  min-height: 0;
+
+  ag-grid-angular {
+    display: block;
+    height: 100%;
+  }
+}

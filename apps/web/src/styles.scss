@@ -31,6 +31,26 @@ select {
     calc(env(safe-area-inset-bottom) + var(--alto-barra) + var(--espacio) * 3);
 }
 
+// Computadora: el contenido va a la derecha de la barra lateral y no hay
+// barra de secciones abajo.
+.escritorio .contenido {
+  margin-left: var(--ancho-lateral);
+}
+
+.escritorio .pantalla {
+  padding-bottom: calc(var(--margen) * 2);
+}
+
+// Pantalla de tabla (sólo computadora): todo el ancho y el alto de la ventana.
+.pantalla-ancha {
+  display: flex;
+  flex-direction: column;
+  gap: var(--margen);
+  height: 100dvh;
+  padding: var(--margen) calc(var(--margen) * 1.5);
+}
+
+.pantalla-ancha > h1,
 .pantalla > h1 {
   margin: 0 0 var(--margen);
   font: var(--titulo-grande);
@@ -72,6 +92,13 @@ select {
   display: block;
   font: var(--cuerpo-chico);
   color: var(--texto-2);
+}
+
+// Celdas de AG Grid alineadas a la derecha (montos). Las dibuja la grilla,
+// fuera de los estilos de cualquier componente.
+.a-la-derecha {
+  justify-content: flex-end;
+  text-align: right;
 }
 
 // Montos y cifras alineados en columna.

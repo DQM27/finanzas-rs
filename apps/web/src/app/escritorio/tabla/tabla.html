@@ -1,0 +1,91 @@
+<section class="tabla" role="region" [attr.aria-label]="etiqueta()">
+  <div class="herramientas">
+    <div class="grupo">
+      <ng-content select="[controles]" />
+      <label class="buscador">
+        <fz-icono nombre="buscar" />
+        <input type="search" autocomplete="off" [placeholder]="marcador()"
+               [attr.aria-label]="'Buscar en ' + etiqueta()"
+               [value]="filtro()" (input)="escribirFiltro($event)" />
+      </label>
+    </div>
+
+    <div class="grupo">
+      <ng-content select="[acciones]" />
+      <p class="conteo" role="status" aria-live="polite">{{ conteo() }}</p>
+
+      <div class="segmentado" role="group" aria-label="Herramientas de la tabla">
+        <button type="button" [attr.aria-pressed]="filtrosVisibles()"
+                [attr.aria-label]="filtrosVisibles() ? 'Ocultar filtros' : 'Mostrar filtros'"
+                [title]="filtrosVisibles() ? 'Ocultar filtros' : 'Mostrar filtros'"
+                (click)="alternarFiltros()">
+          <fz-icono nombre="filtro" />
+        </button>
+        <button type="button" aria-label="Ajustar anchos al contenido" title="Ajustar anchos al contenido"
+                (click)="ajustarAnchos()">
+          <fz-icono nombre="anchos" />
+        </button>
+        <button type="button" aria-label="Restablecer anchos" title="Restablecer anchos"
+                (click)="restablecerAnchos()">
+          <fz-icono nombre="restablecer" />
+        </button>
+        <div class="menu-ancla">
+          <button type="button" aria-label="Columnas visibles" title="Columnas visibles"
+                  aria-haspopup="menu" [attr.aria-expanded]="menuAbierto()"
+                  (click)="menuAbierto.set(!menuAbierto())">
+            <fz-icono nombre="columnas" />
+          </button>
+          @if (menuAbierto()) {
+            <div class="menu" role="menu" aria-label="Columnas visibles">
+              @for (columna of columnasDelMenu(); track columna.clave) {
+                <button type="button" role="menuitemcheckbox"
+                        [attr.aria-checked]="!ocultas().has(columna.clave)"
+                        (click)="alternarColumna(columna.clave)">
+                  <span class="casilla">
+                    @if (!ocultas().has(columna.clave)) {
+                      <fz-icono nombre="check" />
+                    }
+                  </span>
+                  {{ columna.titulo }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+        <button type="button" aria-label="Exportar a CSV" title="Exportar a CSV" (click)="exportar()">
+          <fz-icono nombre="exportar" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="rejilla">
+    <ag-grid-angular
+      [theme]="tema"
+      [columnDefs]="columnasConVisibilidad()"
+      [defaultColDef]="columnaPorDefecto()"
+      [columnTypes]="tiposDeColumna"
+      [rowData]="filas()"
+      [getRowId]="obtenerIdFila()"
+      [getRowClass]="obtenerClaseFila()"
+      [quickFilterText]="filtro()"
+      [quickFilterMatcher]="coincide"
+      [localeText]="textos"
+      [loading]="cargando()"
+      [overlayNoRowsTemplate]="mensajeVacio()"
+      [rowHeight]="altoFila"
+      [headerHeight]="altoEncabezado"
+      [accentedSort]="true"
+      [maintainColumnOrder]="true"
+      [enableCellTextSelection]="true"
+      tooltipShowMode="whenTruncated"
+      [tooltipShowDelay]="400"
+      (gridReady)="alIniciar($event)"
+      (modelUpdated)="alActualizarFilas($event)"
+      (columnMoved)="alCambiarColumnas($event.finished)"
+      (columnResized)="alCambiarColumnas($event.finished)"
+      (sortChanged)="alCambiarColumnas(true)"
+      (rowDoubleClicked)="alDobleClic($event.data)"
+    />
+  </div>
+</section>

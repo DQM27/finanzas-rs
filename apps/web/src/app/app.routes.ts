@@ -22,6 +22,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pantallas/mas').then((m) => m.Mas),
   },
   {
+    path: 'extras',
+    title: 'Extras · Finanzas',
+    loadComponent: () => import('./escritorio/extras').then((m) => m.Extras),
+  },
+  {
+    path: 'gastos',
+    title: 'Gastos · Finanzas',
+    loadComponent: () => import('./escritorio/gastos').then((m) => m.Gastos),
+  },
+  {
     path: 'configuracion',
     title: 'Configuración · Finanzas',
     loadComponent: () => import('./pantallas/configuracion').then((m) => m.Configuracion),

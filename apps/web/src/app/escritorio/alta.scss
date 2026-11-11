@@ -1,0 +1,69 @@
+// Fila para anotar y fila de controles de las pantallas de tabla.
+// Sólo tokens (styles/tokens.scss).
+
+.alta,
+.rango {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espacio);
+  padding: var(--espacio) var(--margen);
+  border-radius: var(--radio-grupo);
+  background: var(--tarjeta);
+}
+
+label {
+  display: grid;
+  gap: var(--chico);
+  font: var(--etiqueta);
+  color: var(--texto-2);
+  text-transform: uppercase;
+}
+
+input,
+select {
+  min-width: calc(var(--columna-etiqueta) * 1.4);
+  height: var(--alto-herramienta);
+  padding: 0 var(--espacio);
+  border: 0;
+  border-radius: var(--radio-icono);
+  background: var(--variante);
+  color: var(--texto);
+  font: var(--cuerpo-chico);
+  text-transform: none;
+}
+
+.ancho {
+  min-width: calc(var(--ancho-buscador) * 0.9);
+}
+
+.guardar {
+  height: var(--alto-herramienta);
+  padding: 0 var(--margen);
+  border: 0;
+  border-radius: var(--radio-icono);
+  background: var(--seccion-relleno, var(--relleno));
+  color: var(--sobre);
+  font: var(--cuerpo-chico);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.guardar:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.falla {
+  flex-basis: 100%;
+  margin: 0;
+  font: var(--cuerpo-chico);
+  font-weight: 600;
+  color: var(--error);
+}
+
+.pie {
+  margin: 0;
+  font: var(--cuerpo-chico);
+  color: var(--texto-2);
+}
