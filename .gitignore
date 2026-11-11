@@ -5,3 +5,6 @@ apps/worker/build/
 node_modules/
 .wrangler/
 .dev.vars
+
+# Historial de `surreal sql`: puede contener claves.
+history.txt

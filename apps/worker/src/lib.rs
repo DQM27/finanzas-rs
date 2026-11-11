@@ -214,7 +214,7 @@ fn contexto(env: &Env) -> Result<ContextoWorker, String> {
         url: texto(env, "SURREAL_URL")?,
         espacio: texto(env, "SURREAL_ESPACIO")?,
         base: texto(env, "SURREAL_BASE")?,
-        credencial: Credencial::Basica {
+        credencial: Credencial::DeBase {
             usuario: texto(env, "SURREAL_USUARIO")?,
             clave: texto(env, "SURREAL_CLAVE")?,
         },

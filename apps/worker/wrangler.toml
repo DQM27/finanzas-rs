@@ -3,6 +3,13 @@ name = "finanzas-rs"
 main = "build/index.js"
 compatibility_date = "2026-11-01"
 
+# Sólo se entra por el dominio propio, que es el que protege Cloudflare Access.
+# workers.dev y las URL de vista previa quedan apagadas: serían una entrada
+# sin Access.
+workers_dev = false
+preview_urls = false
+routes = [{ pattern = "cf.megabrisas.com", custom_domain = true }]
+
 [build]
 command = "cargo install -q worker-build && worker-build --release"
 
@@ -12,7 +19,7 @@ command = "cargo install -q worker-build && worker-build --release"
 SURREAL_URL = "https://06gqbrtn9dv671ekf9ecbetue4.surrealdb.earth"
 SURREAL_ESPACIO = "finanzas"
 SURREAL_BASE = "produccion"
-# Se completan al crear la aplicación en Cloudflare Access.
-ACCESO_EMISOR = "https://EQUIPO.cloudflareaccess.com"
-ACCESO_AUDIENCIA = "AUD_DE_LA_APLICACION"
+# Equipo de Zero Trust y etiqueta AUD de la aplicación de Access de cf.megabrisas.com.
+ACCESO_EMISOR = "https://icy-field-7df6.cloudflareaccess.com"
+ACCESO_AUDIENCIA = "e102eb434c8d758a666f10ddedc8d28ebb5fe0b31c1d2cf5c3d873f453ff0748"
 ZONA_HORARIA_MINUTOS = "-360"

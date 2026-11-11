@@ -66,7 +66,7 @@ mod tests {
                 url: variable("FINANZAS_SURREAL_URL", "http://127.0.0.1:8000"),
                 espacio: "finanzas_pruebas".to_owned(),
                 base: base.clone(),
-                credencial: Credencial::Basica {
+                credencial: Credencial::Raiz {
                     usuario: variable("FINANZAS_SURREAL_USUARIO", "root"),
                     clave: variable("FINANZAS_SURREAL_CLAVE", "root"),
                 },
