@@ -123,9 +123,20 @@ cd apps/worker
 npx wrangler deploy
 ```
 
-`wrangler` compila con `worker-build`, que necesita el objetivo
-`wasm32-unknown-unknown` instalado. La CI ya comprueba que todo compile para ese
-objetivo en cada commit.
+El build de `wrangler` hace dos cosas, en este orden:
+
+1. Compila la PWA (`apps/web`: `npm ci` y `ng build`, con Node 24) en
+   `apps/web/dist/web/browser`.
+2. Compila el Worker con `worker-build`, que necesita el objetivo
+   `wasm32-unknown-unknown` instalado.
+
+La PWA se publica como archivos estáticos del mismo Worker (`[assets]` en
+`wrangler.toml`). Sólo `/api/*` llega al código Rust; cualquier otra ruta que no sea
+un archivo devuelve `index.html`, y la resuelve el router de Angular. Access protege
+el dominio entero, así que la página y la API comparten una sola sesión.
+
+La CI comprueba en cada commit que el Rust compile a WebAssembly y que la PWA
+compile y pase sus pruebas.
 
 En Windows, `worker-build` y las pruebas necesitan un enlazador para el host. Sin las
 Build Tools de Visual Studio, la toolchain `msvc` termina usando el `link.exe` de
@@ -140,7 +151,8 @@ RUSTUP_TOOLCHAIN=1.97.0-x86_64-pc-windows-gnu npx wrangler deploy
 ## 5. Comprobar
 
 - Sin sesión, `curl -s -o /dev/null -w '%{http_code}' https://cf.megabrisas.com/api/caja-chica`
-  da `302` hacia el login de Access.
+  da `302` hacia el login de Access. Lo mismo `/` y cualquier archivo de la PWA.
+- Con sesión, `https://cf.megabrisas.com/` abre la PWA.
 - Con sesión, en el navegador, `/api/caja-chica` responde 404
   `PERFIL_NO_ENCONTRADO` mientras no se cargue el perfil.
 - `npx wrangler tail` no muestra errores de configuración ni de SurrealDB.
@@ -150,5 +162,6 @@ RUSTUP_TOOLCHAIN=1.97.0-x86_64-pc-windows-gnu npx wrangler deploy
 - La pantalla de configuración que use `GET`/`PUT /api/perfil` (la ruta ya existe).
   El perfil de Daniel ya está cargado (11/11/2026), con el calendario oficial hasta
   febrero de 2027 y el estimado de marzo a diciembre de 2027.
-- Servir la PWA de Angular desde el mismo Worker, para que el inicio de sesión sea uno
-  solo.
+- Las pantallas de la PWA (Inicio, Quincena, Anotar y Configuración). Hoy la PWA sólo
+  muestra la caja chica, para comprobar la cadena de punta a punta.
+- Hacerla instalable: manifiesto e íconos.

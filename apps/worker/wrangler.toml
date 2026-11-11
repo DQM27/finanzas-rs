@@ -11,7 +11,17 @@ preview_urls = false
 routes = [{ pattern = "cf.megabrisas.com", custom_domain = true }]
 
 [build]
-command = "cargo install -q worker-build && worker-build --release"
+# Primero la PWA (apps/web), después el Worker.
+command = "npm --prefix ../web ci --no-audit --no-fund && npm --prefix ../web run build && cargo install -q worker-build && worker-build --release"
+
+# La PWA se sirve como archivos estáticos desde el mismo dominio, así que la
+# sesión de Access es una sola. Sólo /api/* llega al código del Worker; una
+# ruta de la app que no sea un archivo devuelve index.html y la resuelve el
+# router de Angular.
+[assets]
+directory = "../web/dist/web/browser"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
 
 # Nada de esto es secreto. Las claves van con `wrangler secret put`:
 # SURREAL_USUARIO, SURREAL_CLAVE y USUARIOS.

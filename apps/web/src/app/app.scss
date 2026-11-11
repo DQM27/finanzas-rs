@@ -1,0 +1,48 @@
+// Sólo tokens (styles/tokens.scss): ningún color ni medida suelta.
+
+.pantalla {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--margen);
+}
+
+h1 {
+  margin: 0 0 var(--espacio);
+  font: var(--titulo-grande);
+}
+
+.tarjeta {
+  padding: var(--margen);
+  border-radius: var(--radio-tarjeta);
+  background: var(--tarjeta);
+}
+
+h2 {
+  margin: 0;
+  font: var(--etiqueta);
+  color: var(--texto-2);
+  text-transform: uppercase;
+}
+
+.cifra {
+  margin: var(--espacio) 0 0;
+  font: var(--cifra);
+  color: var(--s-gasto);
+}
+
+.exceso {
+  margin: 0;
+  font: var(--cuerpo-chico);
+  color: var(--error);
+}
+
+.detalle {
+  margin: var(--espacio) 0 0;
+  font: var(--cuerpo-chico);
+  color: var(--texto-2);
+}
+
+.falla {
+  margin: 0;
+  color: var(--error);
+}
