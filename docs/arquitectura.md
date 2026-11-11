@@ -79,6 +79,7 @@ flowchart TB
 | `contrato` | Pruebas de contrato que cumple todo adaptador | `aplicacion`, `dominio` (sólo como dependencia de pruebas) |
 | `composicion` *(siguiente)* | Arma los casos de uso con sus adaptadores | todos los de arriba |
 | `api` | API HTTP: rutas, JSON y errores, sin runtime; el usuario llega autenticado | `aplicacion`, `dominio`, `serde` |
+| `acceso` | Verifica el JWT de Cloudflare Access (RS256) y traduce el correo a `UsuarioId` | `dominio`, `rsa`, `sha2` |
 | `apps/worker` *(siguiente)* | Worker de Cloudflare: traduce `Request` a `api`, autentica y pone `fetch` y SurrealDB | `api`, `infra-surreal`, `worker` |
 | `apps/web` *(siguiente)* | PWA en Angular; usa el dominio compilado a WASM para validar sin red | `dominio` vía WASM |
 
@@ -191,7 +192,14 @@ En este orden:
    aprobación de Daniel. **No se implementa sin esa aprobación.**
 3. ~~`api`~~ hecho. Falta `apps/worker`: el Worker de Cloudflare que traduce sus
    peticiones a `api`, pone el `fetch` como `EnvioHttp` y autentica a la persona. La
-   autenticación está por decidir; la recomendada es Cloudflare Access (correo
-   verificado → `UsuarioId`), sin manejar claves propias.
+   autenticación quedó decidida: **Cloudflare Access con Google**. El Worker no le
+   cree a la red: verifica el JWT de Access (`crates/acceso`: firma RS256 con las
+   claves del equipo, emisor, audiencia y vigencia; nada de `none` ni HMAC) y traduce
+   el correo con un directorio `correo=uuid` guardado como secreto. Un correo que no
+   esté ahí no entra, aunque Access lo deje pasar.
+
+   La base es la instancia `cfinanzas` de SurrealDB Earth (residencia mundial,
+   versión 4.0.0, scripting e invitados apagados). El Worker entra con un usuario de
+   sistema con rol `EDITOR` en su base; el esquema lo aplica aparte un usuario `OWNER`.
 4. `apps/web`: PWA en Angular, siguiendo el sistema visual de [`diseno.md`](diseno.md).
 5. Migración de los datos de la hoja.

@@ -7,6 +7,7 @@ members = [
     "crates/infra-surreal",
     "crates/contrato",
     "crates/api",
+    "crates/acceso",
 ]
 
 [workspace.package]
@@ -34,6 +35,7 @@ finanzas-infra-memoria = { path = "crates/infra-memoria" }
 finanzas-infra-surreal = { path = "crates/infra-surreal" }
 finanzas-contrato = { path = "crates/contrato" }
 finanzas-api = { path = "crates/api" }
+finanzas-acceso = { path = "crates/acceso" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
