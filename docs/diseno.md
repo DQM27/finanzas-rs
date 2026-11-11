@@ -219,3 +219,16 @@ Baja desde arriba bajo el área segura con `radio-control`, texto blanco 600 y f
   900 px; los componentes no preguntan por el dispositivo.
 - **Montos:** el formato sale de una sola tubería, `colones`, que recibe enteros. La
   aritmética de dinero nunca se hace en TypeScript: viene del dominio (WASM o worker).
+
+### Estado
+
+Hechos, en `apps/web/src/app/ui/`: `fz-grupo`, `fz-renglon`, `fz-tarjeta` (de resumen
+y teñida), `fz-segmentado`, `fz-barra-secciones`, `fz-aviso` (con el servicio
+`Avisos`), `fz-esqueleto`, `button[fz-boton]` y `fz-icono` (trazos propios, sin
+librería). La página **Más → Muestrario** los muestra todos con datos de ejemplo.
+
+Las medidas internas de los componentes (tamaños de ícono, divisor, columna de
+etiqueta, ancho máximo, duraciones) también son tokens, en `tokens.scss`.
+
+Faltan `fz-barra-lateral`, `fz-tabla` y el cambio de nivel a 900 px, que llegan con
+la versión de computadora.

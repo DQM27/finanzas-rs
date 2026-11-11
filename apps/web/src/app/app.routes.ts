@@ -1,3 +1,32 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+export const routes: Routes = [
+  {
+    path: '',
+    title: 'Finanzas',
+    loadComponent: () => import('./pantallas/inicio').then((m) => m.Inicio),
+  },
+  {
+    path: 'quincena',
+    title: 'Quincena · Finanzas',
+    loadComponent: () => import('./pantallas/pronto').then((m) => m.Pronto),
+    data: { titulo: 'Quincena' },
+  },
+  {
+    path: 'anotar',
+    title: 'Anotar · Finanzas',
+    loadComponent: () => import('./pantallas/pronto').then((m) => m.Pronto),
+    data: { titulo: 'Anotar' },
+  },
+  {
+    path: 'mas',
+    title: 'Más · Finanzas',
+    loadComponent: () => import('./pantallas/mas').then((m) => m.Mas),
+  },
+  {
+    path: 'muestrario',
+    title: 'Muestrario · Finanzas',
+    loadComponent: () => import('./pantallas/muestrario').then((m) => m.Muestrario),
+  },
+  { path: '**', redirectTo: '' },
+];

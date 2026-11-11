@@ -22,6 +22,34 @@ select {
   color: inherit;
 }
 
+// Una pantalla: una columna centrada, con lugar abajo para la barra de
+// secciones (que flota sobre el área segura).
+.pantalla {
+  max-width: var(--ancho-maximo);
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + var(--margen)) var(--margen)
+    calc(env(safe-area-inset-bottom) + var(--alto-barra) + var(--espacio) * 3);
+}
+
+.pantalla > h1 {
+  margin: 0 0 var(--margen);
+  font: var(--titulo-grande);
+}
+
+// Campo dentro de un renglón: sin marco, alineado a la derecha.
+.campo {
+  width: 100%;
+  min-height: var(--toque);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: right;
+}
+
+.campo::placeholder {
+  color: var(--texto-2);
+}
+
 // Montos y cifras alineados en columna.
 .cifras {
   font-variant-numeric: tabular-nums;

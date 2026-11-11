@@ -63,9 +63,59 @@
   --alto-barra: 58px;
   --espacio: 12px;
   --margen: 16px;
+  --ancho-maximo: 560px;
+  --toque: 44px; // superficie tocable mínima
+  --columna-etiqueta: 96px;
+  --divisor: 0.5px;
+  --sangria-divisor: 16px;
+  --sangria-divisor-icono: 58px;
+  --alto-progreso: 6px;
+  --franja: 4px;
+  --icono-renglon: 30px;
+  --radio-icono: 8px;
+  --icono-barra: 22px;
+  --marca: 24px;
+  --radio-segmentado: 9px;
+  --hueco-segmentado: 2px;
+  --hueco-barra: 5px; // radio de la píldora = radio-barra − hueco-barra
+  --desenfoque: 18px;
+  --linea: 1px; // borde de la barra de vidrio
+  --chico: 4px; // separaciones finas dentro de un componente
 
   // Movimiento.
   --curva: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --rapido: 200ms;
+  --lento: 450ms;
+  --duracion-aviso: 2400ms;
+  --pulso: 1400ms;
+  --sombra-segmento: 0 1px 3px rgb(0 0 0 / 12%);
+}
+
+// Tono de sección: cada componente de sección fija `data-seccion` y usa
+// `--seccion` (texto, íconos) y `--seccion-relleno` (fondo bajo texto blanco).
+[data-seccion='gasto'] {
+  --seccion: var(--s-gasto);
+  --seccion-relleno: var(--s-gasto-r);
+}
+[data-seccion='extra'] {
+  --seccion: var(--s-extra);
+  --seccion-relleno: var(--s-extra-r);
+}
+[data-seccion='fondo'] {
+  --seccion: var(--s-fondo);
+  --seccion-relleno: var(--s-fondo-r);
+}
+[data-seccion='quincena'] {
+  --seccion: var(--s-quincena);
+  --seccion-relleno: var(--s-quincena-r);
+}
+[data-seccion='moto'] {
+  --seccion: var(--s-moto);
+  --seccion-relleno: var(--s-moto-r);
+}
+[data-seccion='insta'] {
+  --seccion: var(--s-insta);
+  --seccion-relleno: var(--s-insta-r);
 }
 
 @media (prefers-color-scheme: dark) {
