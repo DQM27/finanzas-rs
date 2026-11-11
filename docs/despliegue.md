@@ -58,6 +58,20 @@ puede repetir sin miedo: usa `OVERWRITE`. Se verifica con `INFO FOR DB;`: tablas
 La clave de `esquema` no se guarda en ningún lado. Para la próxima migración se
 redefine (`DEFINE USER OVERWRITE esquema …`) con un root temporal como el de arriba.
 
+### Consultas desde Studio: siempre con `USE`
+
+El editor de consultas de Studio abre en `main` / `main` o en el último namespace
+elegido, no en el del Worker. Una consulta corrida ahí no da error (si la tabla no
+existe con esquema, SurrealDB la crea) y simplemente no llega a la app. Toda consulta
+para producción empieza con:
+
+```surql
+USE NS finanzas DB produccion;
+```
+
+Así pasó con la primera carga del perfil: quedó en un namespace viejo de prueba
+(`cfinanzas`), que después se borró.
+
 ### Cómo entra el Worker
 
 El cliente (`crates/infra-surreal`) hace `signin` por RPC con usuario, clave,
@@ -133,7 +147,8 @@ RUSTUP_TOOLCHAIN=1.97.0-x86_64-pc-windows-gnu npx wrangler deploy
 
 ## Qué queda pendiente
 
-- Cargar el perfil (salario, tarifas, calendario de cortes) del primer usuario.
-  Mientras no exista, la API responde `PERFIL_NO_ENCONTRADO`.
+- Una ruta `PUT /api/perfil` y su pantalla, para no cargar el perfil a mano. El de
+  Daniel ya está cargado (11/11/2026), con el calendario oficial hasta febrero de 2027
+  y el estimado de marzo a diciembre de 2027.
 - Servir la PWA de Angular desde el mismo Worker, para que el inicio de sesión sea uno
   solo.
