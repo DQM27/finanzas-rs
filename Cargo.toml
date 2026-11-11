@@ -8,6 +8,7 @@ members = [
     "crates/contrato",
     "crates/api",
     "crates/acceso",
+    "apps/worker",
 ]
 
 [workspace.package]

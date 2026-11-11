@@ -7,6 +7,8 @@ Documentos relacionados:
 
 - [`reglas.md`](reglas.md): catálogo de reglas de negocio con su código y estado.
 - [`diseno.md`](diseno.md): sistema visual de la interfaz.
+- [`despliegue.md`](despliegue.md): cómo publicar el Worker con SurrealDB Earth y
+  Cloudflare Access.
 - [`propuesta-cierre.md`](propuesta-cierre.md): propuesta (sin aprobar) del cierre de
   quincena.
 - [`../AGENTS.md`](../AGENTS.md): preferencias del usuario y reglas de trabajo.
@@ -80,7 +82,7 @@ flowchart TB
 | `composicion` *(siguiente)* | Arma los casos de uso con sus adaptadores | todos los de arriba |
 | `api` | API HTTP: rutas, JSON y errores, sin runtime; el usuario llega autenticado | `aplicacion`, `dominio`, `serde` |
 | `acceso` | Verifica el JWT de Cloudflare Access (RS256) y traduce el correo a `UsuarioId` | `dominio`, `rsa`, `sha2` |
-| `apps/worker` *(siguiente)* | Worker de Cloudflare: traduce `Request` a `api`, autentica y pone `fetch` y SurrealDB | `api`, `infra-surreal`, `worker` |
+| `apps/worker` | Worker de Cloudflare: verifica Access, traduce `Request` a `api` y pone `fetch` y SurrealDB | `api`, `acceso`, `infra-surreal`, `worker` |
 | `apps/web` *(siguiente)* | PWA en Angular; usa el dominio compilado a WASM para validar sin red | `dominio` vía WASM |
 
 La pureza del dominio la vigila `crates/dominio/tests/arquitectura.rs`: falla si el
@@ -190,10 +192,9 @@ En este orden:
 2. Casos de uso que faltan: ~~fondo~~, ~~quincena~~ y ~~deshacer~~ hechos. Queda el
    cierre: hay una propuesta en [`propuesta-cierre.md`](propuesta-cierre.md) que espera la
    aprobación de Daniel. **No se implementa sin esa aprobación.**
-3. ~~`api`~~ hecho. Falta `apps/worker`: el Worker de Cloudflare que traduce sus
-   peticiones a `api`, pone el `fetch` como `EnvioHttp` y autentica a la persona. La
-   autenticación quedó decidida: **Cloudflare Access con Google**. El Worker no le
-   cree a la red: verifica el JWT de Access (`crates/acceso`: firma RS256 con las
+3. ~~`api`~~ y ~~`apps/worker`~~ hechos; falta publicarlo siguiendo
+   [`despliegue.md`](despliegue.md). La autenticación quedó decidida: **Cloudflare
+   Access con Google**. El Worker no le cree a la red: verifica el JWT de Access (`crates/acceso`: firma RS256 con las
    claves del equipo, emisor, audiencia y vigencia; nada de `none` ni HMAC) y traduce
    el correo con un directorio `correo=uuid` guardado como secreto. Un correo que no
    esté ahí no entra, aunque Access lo deje pasar.

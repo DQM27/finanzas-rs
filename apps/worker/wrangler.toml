@@ -1,0 +1,18 @@
+# Worker de finanzas-rs. Pasos completos en docs/despliegue.md.
+name = "finanzas-rs"
+main = "build/index.js"
+compatibility_date = "2026-11-01"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+# Nada de esto es secreto. Las claves van con `wrangler secret put`:
+# SURREAL_USUARIO, SURREAL_CLAVE y USUARIOS.
+[vars]
+SURREAL_URL = "https://06gqbrtn9dv671ekf9ecbetue4.surrealdb.earth"
+SURREAL_ESPACIO = "finanzas"
+SURREAL_BASE = "produccion"
+# Se completan al crear la aplicación en Cloudflare Access.
+ACCESO_EMISOR = "https://EQUIPO.cloudflareaccess.com"
+ACCESO_AUDIENCIA = "AUD_DE_LA_APLICACION"
+ZONA_HORARIA_MINUTOS = "-360"

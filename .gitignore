@@ -1,1 +1,7 @@
 /target
+
+# Worker
+apps/worker/build/
+node_modules/
+.wrangler/
+.dev.vars
