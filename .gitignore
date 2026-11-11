@@ -12,3 +12,8 @@ history.txt
 # Angular
 apps/web/.angular/
 apps/web/dist/
+
+# Hojas de cálculo con finanzas personales: nunca al repositorio.
+*.xlsx
+*.xls
+*.ods
