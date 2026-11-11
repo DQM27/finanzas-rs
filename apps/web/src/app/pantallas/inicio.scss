@@ -64,3 +64,22 @@ p {
 .ancho {
   flex: 1;
 }
+
+.deshacer {
+  display: inline-grid;
+  place-items: center;
+  width: var(--toque);
+  height: var(--toque);
+  margin-right: calc(var(--espacio) * -1);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio-icono);
+  background: transparent;
+  color: var(--texto-2);
+  font-size: var(--icono-barra);
+  cursor: pointer;
+}
+
+.deshacer:active {
+  background: var(--pildora);
+}

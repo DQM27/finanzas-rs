@@ -1,0 +1,74 @@
+<main class="pantalla">
+  <h1>Anotar</h1>
+
+  <fz-segmentado class="que" etiqueta="Qué anotar" [segmentos]="opciones"
+                 [valor]="que()" (valorChange)="cambiar($event)" />
+
+  @if (que() === 'gasto') {
+    <form data-seccion="gasto" (ngSubmit)="guardarGasto()">
+      <fz-grupo titulo="Nuevo gasto" [nota]="falla() ?? 'Lo que sale del fondo de emergencia no cuenta en la caja chica.'"
+                [error]="!!falla()">
+        <fz-renglon etiqueta="Fecha">
+          <input class="campo" type="date" name="fecha" aria-label="Fecha"
+                 [ngModel]="fechaGasto()" (ngModelChange)="fechaGasto.set($event)" />
+        </fz-renglon>
+        <fz-renglon etiqueta="Concepto">
+          <input class="campo" name="concepto" placeholder="Requerido" maxlength="80"
+                 autocomplete="off" aria-label="Concepto"
+                 [ngModel]="concepto()" (ngModelChange)="concepto.set($event)" />
+        </fz-renglon>
+        <fz-renglon etiqueta="Monto">
+          <input class="campo cifras" name="monto" inputmode="numeric" placeholder="Requerido"
+                 autocomplete="off" aria-label="Monto en colones"
+                 [ngModel]="montoGasto()" (ngModelChange)="montoGasto.set($event)" />
+        </fz-renglon>
+        <fz-renglon etiqueta="Categoría">
+          <select class="campo selector" name="categoria" aria-label="Categoría"
+                  [ngModel]="categoria()" (ngModelChange)="categoria.set($event)">
+            @for (c of categorias; track c[0]) {
+              <option [value]="c[0]">{{ c[1] }}</option>
+            }
+          </select>
+          <fz-icono slot="valor" nombre="chevron" class="chevron" />
+        </fz-renglon>
+        <fz-renglon etiqueta="De dónde">
+          <select class="campo selector" name="origen" aria-label="De dónde salió la plata"
+                  [ngModel]="origen()" (ngModelChange)="origen.set($event)">
+            @for (o of origenes; track o[0]) {
+              <option [value]="o[0]">{{ o[1] }}</option>
+            }
+          </select>
+          <fz-icono slot="valor" nombre="chevron" class="chevron" />
+        </fz-renglon>
+      </fz-grupo>
+      <button fz-boton type="submit" [guardando]="guardando()">Guardar gasto</button>
+    </form>
+  } @else {
+    <form data-seccion="extra" (ngSubmit)="guardarExtra()">
+      <fz-grupo titulo="Nueva extra"
+                [nota]="falla() ?? (tipo() === 'OTRA' ? 'Una extra «Otra» necesita el monto.' : 'Sin monto, se usa tu tarifa.')"
+                [error]="!!falla()">
+        <fz-renglon etiqueta="Fecha">
+          <input class="campo" type="date" name="fecha" aria-label="Fecha trabajada"
+                 [ngModel]="fechaExtra()" (ngModelChange)="fechaExtra.set($event)" />
+        </fz-renglon>
+        <fz-renglon etiqueta="Tipo">
+          <select class="campo selector" name="tipo" aria-label="Tipo de extra"
+                  [ngModel]="tipo()" (ngModelChange)="tipo.set($event)">
+            @for (t of tipos; track t[0]) {
+              <option [value]="t[0]">{{ t[1] }}</option>
+            }
+          </select>
+          <fz-icono slot="valor" nombre="chevron" class="chevron" />
+        </fz-renglon>
+        <fz-renglon etiqueta="Monto">
+          <input class="campo cifras" name="monto" inputmode="numeric" autocomplete="off"
+                 aria-label="Monto bruto en colones"
+                 [placeholder]="tipo() === 'OTRA' ? 'Requerido' : 'Opcional'"
+                 [ngModel]="montoExtra()" (ngModelChange)="montoExtra.set($event)" />
+        </fz-renglon>
+      </fz-grupo>
+      <button fz-boton type="submit" [guardando]="guardando()">Guardar extra</button>
+    </form>
+  }
+</main>

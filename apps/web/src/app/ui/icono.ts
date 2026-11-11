@@ -8,6 +8,7 @@ const TRAZOS = {
   mas: 'M5 12h.01M12 12h.01M19 12h.01',
   chevron: 'm9 6 6 6-6 6',
   check: 'm5 12.5 4.5 4.5L19 7.5',
+  deshacer: 'M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11',
 } as const;
 
 export type NombreIcono = keyof typeof TRAZOS;

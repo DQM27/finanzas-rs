@@ -29,7 +29,8 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       margin: 0 0 var(--chico);
       padding-inline: var(--margen);
       font: var(--etiqueta);
-      color: var(--texto-2);
+      // Un formulario de sección lo pinta de su tono con --titulo-grupo.
+      color: var(--titulo-grupo, var(--texto-2));
       text-transform: uppercase;
     }
     .grupo {

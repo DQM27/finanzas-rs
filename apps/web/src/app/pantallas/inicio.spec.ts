@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { Avisos } from '../ui/aviso';
 import { Inicio } from './inicio';
 
 const CAJA = { desde: '2026-11-13', hasta: '2026-11-29', queda: 4000, exceso: 0, nivel: 'BAJA' };
@@ -68,6 +69,7 @@ describe('Inicio', () => {
     });
     http.expectOne('/api/quincenas/actual').flush(QUINCENA);
     http.expectOne('/api/fondo').flush({ saldo: 415000, por_reponer: 0, cuota_mensual: 0 });
+    await fixture.whenStable();
     http.expectOne('/api/gastos/2026-11-13/2026-11-29').flush(GASTOS);
     await fixture.whenStable();
 
@@ -99,6 +101,37 @@ describe('Inicio', () => {
     expect(pagina.querySelectorAll('fz-esqueleto').length).toBe(0);
   });
 
+  it('deshace un gasto con confirmación y vuelve a pedir la caja', async () => {
+    const { fixture, pagina } = await montar();
+    http.expectOne('/api/caja-chica').flush(CAJA);
+    http.expectOne('/api/perfil').flush({ tope_caja_chica: 5000 });
+    http.expectOne('/api/cortes/hoy').flush({ en_curso: CORTE, proximo_pago: CORTE, dias_para_pago: 15 });
+    http.expectOne('/api/quincenas/actual').flush(QUINCENA);
+    http.expectOne('/api/fondo').flush({ saldo: 0, por_reponer: 0, cuota_mensual: 0 });
+    await fixture.whenStable();
+    http.expectOne('/api/gastos/2026-11-13/2026-11-29').flush(GASTOS);
+    await fixture.whenStable();
+
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
+    pagina.querySelector<HTMLButtonElement>('[aria-label="Deshacer PASES"]')!.click();
+    expect(confirmar).toHaveBeenCalledWith('¿Deshacer «PASES» de ₡1,500?');
+    http.expectNone('/api/gastos/b');
+
+    confirmar.mockReturnValueOnce(true);
+    pagina.querySelector<HTMLButtonElement>('[aria-label="Deshacer PASES"]')!.click();
+    http.expectOne({ method: 'DELETE', url: '/api/gastos/b' }).flush(null, { status: 204, statusText: 'No Content' });
+    http.expectOne('/api/caja-chica').flush({ ...CAJA, queda: 5000, nivel: 'HOLGADA' });
+    await fixture.whenStable();
+    http.expectOne('/api/gastos/2026-11-13/2026-11-29').flush([GASTOS[0]]);
+    await fixture.whenStable();
+
+    expect(TestBed.inject(Avisos).actual()?.texto).toBe('Gasto deshecho');
+    expect(tarjeta(pagina, 'Caja chica').querySelector('.cifra')?.textContent).toContain('₡5,000');
+    const gastos = [...pagina.querySelectorAll('fz-grupo .linea-1')].map((e) => e.textContent?.trim());
+    expect(gastos).toEqual(['ALMUERZO']);
+    confirmar.mockRestore();
+  });
+
   it('sin presupuesto, invita a armarlo; lo demás se ve igual', async () => {
     const { fixture, pagina } = await montar();
     http.expectOne('/api/caja-chica').flush(CAJA);
@@ -108,6 +141,7 @@ describe('Inicio', () => {
       .expectOne('/api/quincenas/actual')
       .flush({ codigo: 'SIN_PRESUPUESTO', mensaje: 'esa quincena todavía no tiene presupuesto' }, NO_ENCONTRADO);
     http.expectOne('/api/fondo').flush({ saldo: 0, por_reponer: 0, cuota_mensual: 0 });
+    await fixture.whenStable();
     http.expectOne('/api/gastos/2026-11-13/2026-11-29').flush([]);
     await fixture.whenStable();
 

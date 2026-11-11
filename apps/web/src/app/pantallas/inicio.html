@@ -107,6 +107,10 @@
             <span class="linea-1">{{ gasto.concepto }}</span>
             <span class="linea-2">{{ categorias[gasto.categoria] }} · {{ gasto.fecha | fechaCorta }}</span>
             <span slot="valor" class="cifras">{{ gasto.monto | colones }}</span>
+            <button slot="valor" type="button" class="deshacer"
+                    [attr.aria-label]="'Deshacer ' + gasto.concepto" (click)="deshacer(gasto)">
+              <fz-icono nombre="deshacer" />
+            </button>
           </fz-renglon>
         } @empty {
           <fz-renglon><span class="vacio">Todavía no anotaste gastos en este periodo.</span></fz-renglon>

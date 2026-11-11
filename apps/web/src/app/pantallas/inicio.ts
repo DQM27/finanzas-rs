@@ -1,13 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { shareReplay, switchMap } from 'rxjs';
+import { BehaviorSubject, filter, map } from 'rxjs';
 import type { Caja, Gasto, NivelCaja, Quincena } from '../nucleo/api';
-import { cargar, valor } from '../nucleo/carga';
+import { cargar, recargable, valor } from '../nucleo/carga';
 import { CATEGORIAS, faltan } from '../nucleo/etiquetas';
-import { Finanzas } from '../nucleo/finanzas';
+import { FallaApi, Finanzas } from '../nucleo/finanzas';
 import { ColonesPipe, FechaCortaPipe, colones, fechaCorta, hoy } from '../nucleo/formato';
+import { Avisos } from '../ui/aviso';
 import { Esqueleto } from '../ui/esqueleto';
 import { Grupo } from '../ui/grupo';
+import { Icono } from '../ui/icono';
 import { Renglon } from '../ui/renglon';
 import { EstadoBarra, Tarjeta } from '../ui/tarjeta';
 
@@ -28,22 +31,29 @@ const COLOR_CAJA: Record<NivelCaja, EstadoBarra> = {
 @Component({
   selector: 'fz-inicio',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ColonesPipe, Esqueleto, FechaCortaPipe, Grupo, Renglon, RouterLink, Tarjeta],
+  imports: [ColonesPipe, Esqueleto, FechaCortaPipe, Grupo, Icono, Renglon, RouterLink, Tarjeta],
   templateUrl: './inicio.html',
   styleUrl: './inicio.scss',
 })
 export class Inicio {
   readonly #finanzas = inject(Finanzas);
-  readonly #caja$ = this.#finanzas.caja().pipe(shareReplay(1));
+  readonly #avisos = inject(Avisos);
+  /** Emite para volver a pedir la caja chica (y con ella, sus gastos). */
+  readonly #recarga = new BehaviorSubject<void>(undefined);
 
   protected readonly hoy = fechaCorta(hoy());
-  protected readonly caja = cargar(this.#caja$);
+  protected readonly caja = recargable(this.#recarga, () => this.#finanzas.caja());
   protected readonly perfil = cargar(this.#finanzas.perfil());
   protected readonly cortes = cargar(this.#finanzas.cortesHoy());
   protected readonly quincena = cargar(this.#finanzas.quincena('actual'));
   protected readonly fondo = cargar(this.#finanzas.fondo());
-  protected readonly gastos = cargar(
-    this.#caja$.pipe(switchMap((c) => this.#finanzas.gastos(c.desde, c.hasta))),
+  /** Los gastos del periodo de la caja; se piden de nuevo cada vez que llega la caja. */
+  protected readonly gastos = recargable(
+    toObservable(this.caja).pipe(
+      map((c) => valor(c)),
+      filter((c): c is Caja => c !== undefined),
+    ),
+    (c) => this.#finanzas.gastos(c.desde, c.hasta),
   );
 
   protected readonly categorias = CATEGORIAS;
@@ -68,6 +78,18 @@ export class Inicio {
   protected notaCaja(c: Caja): string {
     const periodo = `${fechaCorta(c.desde)} – ${fechaCorta(c.hasta)}`;
     return c.exceso > 0 ? `Te pasaste ${colones(c.exceso)} · ${periodo}` : periodo;
+  }
+
+  /** Deshace un gasto, con confirmación, y vuelve a pedir la caja chica. */
+  protected deshacer(g: Gasto): void {
+    if (!confirm(`¿Deshacer «${g.concepto}» de ${colones(g.monto)}?`)) return;
+    this.#finanzas.borrarGasto(g.id).subscribe({
+      next: () => {
+        this.#avisos.exito('Gasto deshecho');
+        this.#recarga.next();
+      },
+      error: (e: FallaApi) => this.#avisos.error(e.message),
+    });
   }
 
   /** Pagos hechos contra el total, sólo para el largo de la barra. */

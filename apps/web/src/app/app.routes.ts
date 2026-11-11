@@ -15,8 +15,7 @@ export const routes: Routes = [
   {
     path: 'anotar',
     title: 'Anotar · Finanzas',
-    loadComponent: () => import('./pantallas/pronto').then((m) => m.Pronto),
-    data: { titulo: 'Anotar' },
+    loadComponent: () => import('./pantallas/anotar').then((m) => m.Anotar),
   },
   {
     path: 'mas',

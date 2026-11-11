@@ -1,0 +1,21 @@
+// Sólo tokens (styles/tokens.scss).
+
+.que {
+  margin-bottom: calc(var(--espacio) * 2);
+}
+
+form {
+  // El título del formulario va en el tono de su sección.
+  --titulo-grupo: var(--seccion);
+}
+
+.selector {
+  appearance: none;
+  color: var(--acento);
+  text-align-last: right;
+  cursor: pointer;
+}
+
+.chevron {
+  color: var(--texto-2);
+}
