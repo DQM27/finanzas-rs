@@ -50,6 +50,30 @@ select {
   color: var(--texto-2);
 }
 
+// Renglón de movimiento: ícono de 30 px con el tono de la sección al 22 %
+// (la sección la fija `data-seccion` en el renglón) y dos líneas de texto.
+.icono-seccion {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--icono-renglon);
+  height: var(--icono-renglon);
+  border-radius: var(--radio-icono);
+  background: color-mix(in srgb, var(--seccion) 22%, transparent);
+  color: var(--seccion);
+  font: var(--etiqueta);
+}
+
+.linea-1 {
+  display: block;
+}
+
+.linea-2 {
+  display: block;
+  font: var(--cuerpo-chico);
+  color: var(--texto-2);
+}
+
 // Montos y cifras alineados en columna.
 .cifras {
   font-variant-numeric: tabular-nums;

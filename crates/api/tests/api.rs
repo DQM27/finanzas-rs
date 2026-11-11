@@ -558,4 +558,42 @@ mod tests {
             "fecha mala"
         );
     }
+
+    #[test]
+    fn el_calendario_visto_desde_hoy() {
+        // Domingo 15/11: cae en el corte del 2 al 16, que se paga el 30.
+        let mut m = mundo();
+        let (estado, c) = pedir(&m, DANIEL, Metodo::Get, "/cortes/hoy", None);
+        assert_eq!(estado, 200, "{c}");
+        assert_eq!(c["en_curso"]["inicio"], "2026-11-02", "corte de hoy");
+        assert_eq!(c["en_curso"]["reportar_antes"], "2026-11-17", "reportar");
+        assert_eq!(c["proximo_pago"]["pago"], "2026-11-30", "próximo pago");
+        assert_eq!(c["dias_para_pago"], 15, "días que faltan");
+
+        // El día de pago cuenta como próximo pago, con 0 días.
+        m.reloj = RelojFijo(NaiveDate::from_ymd_opt(2026, 11, 13).unwrap());
+        let (_, c) = pedir(&m, DANIEL, Metodo::Get, "/cortes/hoy", None);
+        assert_eq!(c["proximo_pago"]["pago"], "2026-11-13", "hoy pagan");
+        assert_eq!(c["dias_para_pago"], 0, "es hoy");
+
+        // Fuera del calendario: nada en curso ni por cobrar.
+        m.reloj = RelojFijo(NaiveDate::from_ymd_opt(2027, 1, 10).unwrap());
+        let (estado, c) = pedir(&m, DANIEL, Metodo::Get, "/cortes/hoy", None);
+        assert_eq!(estado, 200, "{c}");
+        assert_eq!(
+            c,
+            json!({ "en_curso": null, "proximo_pago": null, "dias_para_pago": null }),
+            "el calendario no cubre esa fecha"
+        );
+
+        let (estado, r) = pedir(&m, DANIEL, Metodo::Post, "/cortes/hoy", None);
+        assert_eq!(
+            (estado, codigo(&r)),
+            (405, "METODO_NO_PERMITIDO"),
+            "sólo se lee"
+        );
+        let sin_perfil = mundo_con(PerfilesEnMemoria::default());
+        let (estado, r) = pedir(&sin_perfil, DANIEL, Metodo::Get, "/cortes/hoy", None);
+        assert_eq!((estado, codigo(&r)), (404, "PERFIL_NO_ENCONTRADO"), "{r}");
+    }
 }

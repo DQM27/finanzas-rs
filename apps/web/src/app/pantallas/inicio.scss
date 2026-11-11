@@ -1,0 +1,66 @@
+// Sólo tokens (styles/tokens.scss).
+
+.encabezado {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--margen);
+}
+
+.encabezado h1 {
+  margin: 0;
+  font: var(--titulo-grande);
+}
+
+.hoy {
+  margin: 0;
+  font: var(--etiqueta);
+  color: var(--texto-2);
+}
+
+.pila {
+  display: grid;
+  gap: var(--espacio);
+  margin-bottom: calc(var(--espacio) * 2);
+}
+
+.enlace {
+  display: block;
+  border-radius: var(--radio-tarjeta);
+  color: inherit;
+  text-decoration: none;
+  transition: opacity var(--rapido) var(--curva);
+}
+
+.enlace:active {
+  opacity: 0.8;
+}
+
+p {
+  margin: 0;
+}
+
+.fecha {
+  margin-top: var(--chico);
+  font: var(--cifra);
+  color: var(--seccion);
+}
+
+.detalle {
+  margin-top: var(--chico);
+  font: var(--cuerpo-chico);
+  color: var(--texto-2);
+}
+
+.falla {
+  margin-top: var(--chico);
+  color: var(--error);
+}
+
+.vacio {
+  color: var(--texto-2);
+}
+
+.ancho {
+  flex: 1;
+}

@@ -39,7 +39,7 @@ export function estadoBarra(proporcion: number): Exclude<EstadoBarra, 'acento'> 
     @if (proporcion() !== undefined) {
       <div class="pista" role="progressbar" aria-valuemin="0" aria-valuemax="100"
            [attr.aria-valuenow]="porcentaje()" [attr.aria-label]="clave()">
-        <div class="barra" [attr.data-estado]="estado()" [style.width.%]="porcentaje()"></div>
+        <div class="barra" [attr.data-estado]="color()" [style.width.%]="porcentaje()"></div>
       </div>
     }
     @if (nota()) {
@@ -117,6 +117,11 @@ export class Tarjeta {
   readonly proporcion = input<number>();
   /** La barra va en `acento` sea cual sea el valor. */
   readonly crece = input(false);
+  /**
+   * El color de la barra ya decidido. Cuando el dominio da el nivel (como el
+   * de la caja chica), manda él y la tarjeta no calcula nada.
+   */
+  readonly estado = input<EstadoBarra>();
   readonly nota = input<string>();
   readonly tenida = input(false);
   readonly tono = input<'error' | 'exito'>();
@@ -125,7 +130,7 @@ export class Tarjeta {
   protected readonly porcentaje = computed(() =>
     Math.round(Math.min(1, Math.max(0, this.proporcion() ?? 0)) * 100),
   );
-  protected readonly estado = computed<EstadoBarra>(() =>
-    this.crece() ? 'acento' : estadoBarra(this.proporcion() ?? 0),
+  protected readonly color = computed<EstadoBarra>(
+    () => this.estado() ?? (this.crece() ? 'acento' : estadoBarra(this.proporcion() ?? 0)),
   );
 }

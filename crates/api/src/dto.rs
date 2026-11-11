@@ -4,12 +4,14 @@
 
 use chrono::NaiveDate;
 use finanzas_aplicacion::casos_de_uso::consultar_caja_chica::ResumenCaja;
+use finanzas_aplicacion::casos_de_uso::cortes::CortesHoy;
 use finanzas_aplicacion::casos_de_uso::fondo::{Deposito, RetiroHecho};
 use finanzas_aplicacion::casos_de_uso::perfil::{CortePedido, ResumenPerfil};
 use finanzas_aplicacion::casos_de_uso::quincena::{LineaPedida, ResumenQuincena};
 use finanzas_aplicacion::casos_de_uso::registrar_extra::ExtraRegistrada;
 use finanzas_aplicacion::casos_de_uso::registrar_gasto::GastoRegistrado;
 use finanzas_dominio::caja_chica::NivelCaja;
+use finanzas_dominio::calendario::Corte;
 use finanzas_dominio::dinero::Colones;
 use finanzas_dominio::extra::TipoExtra;
 use finanzas_dominio::fondo::{NivelEmergencia, PlanReposicion};
@@ -532,6 +534,38 @@ pub struct CorteDto {
     pub pago: NaiveDate,
 }
 
+impl From<&Corte> for CorteDto {
+    fn from(c: &Corte) -> Self {
+        Self {
+            inicio: c.inicio(),
+            fin: c.fin(),
+            reportar_antes: c.reportar_antes(),
+            pago: c.pago(),
+        }
+    }
+}
+
+/// `GET /cortes/hoy`: el calendario visto desde hoy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct CortesHoyDto {
+    /// El corte en que cae hoy: lo trabajado hoy se reporta y se paga según él.
+    pub en_curso: Option<CorteDto>,
+    /// El próximo pago, hoy incluido.
+    pub proximo_pago: Option<CorteDto>,
+    /// Días hasta ese pago (0 si es hoy).
+    pub dias_para_pago: Option<i64>,
+}
+
+impl From<CortesHoy> for CortesHoyDto {
+    fn from(c: CortesHoy) -> Self {
+        Self {
+            en_curso: c.en_curso.as_ref().map(CorteDto::from),
+            proximo_pago: c.proximo_pago.as_ref().map(CorteDto::from),
+            dias_para_pago: c.dias_para_pago,
+        }
+    }
+}
+
 impl From<CorteDto> for CortePedido {
     fn from(c: CorteDto) -> Self {
         Self {
@@ -586,17 +620,7 @@ impl From<ResumenPerfil> for PerfilDto {
                 feriado: tarifa(TipoExtra::Feriado),
             },
             tope_caja_chica: p.caja_chica().tope().valor(),
-            cortes: p
-                .calendario()
-                .cortes()
-                .iter()
-                .map(|c| CorteDto {
-                    inicio: c.inicio(),
-                    fin: c.fin(),
-                    reportar_antes: c.reportar_antes(),
-                    pago: c.pago(),
-                })
-                .collect(),
+            cortes: p.calendario().cortes().iter().map(CorteDto::from).collect(),
             cubre_hasta: r.cubre_hasta,
         }
     }

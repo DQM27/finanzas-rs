@@ -12,6 +12,7 @@
 //! |---|---|---|
 //! | `GET` | `/perfil` | El perfil propio |
 //! | `PUT` | `/perfil` | Reemplaza el perfil propio |
+//! | `GET` | `/cortes/hoy` | El corte en curso y el próximo pago |
 //! | `GET` | `/caja-chica` | Caja chica del periodo |
 //! | `GET` | `/gastos/{desde}/{hasta}` | Los gastos entre dos fechas |
 //! | `POST` | `/gastos` | Anota un gasto |
@@ -39,15 +40,16 @@ mod errores;
 
 use chrono::NaiveDate;
 use dto::{
-    CajaDto, ExtraDto, FondoDto, GastoDto, GastoRegistradoDto, Marca, MovimientoFondoDto,
-    NuevaExtra, NuevoDeposito, NuevoGasto, NuevoPerfil, NuevoRetiro, PerfilDto, Presupuesto,
-    QuincenaDto, RetiroDto,
+    CajaDto, CortesHoyDto, ExtraDto, FondoDto, GastoDto, GastoRegistradoDto, Marca,
+    MovimientoFondoDto, NuevaExtra, NuevoDeposito, NuevoGasto, NuevoPerfil, NuevoRetiro, PerfilDto,
+    Presupuesto, QuincenaDto, RetiroDto,
 };
 use errores::{ErrorApi, Resultado};
 use finanzas_aplicacion::casos_de_uso::consultar_caja_chica::ConsultarCajaChica;
 use finanzas_aplicacion::casos_de_uso::consultas::{
     ListarExtras, ListarGastos, ListarMovimientosFondo,
 };
+use finanzas_aplicacion::casos_de_uso::cortes::ConsultarCortesHoy;
 use finanzas_aplicacion::casos_de_uso::deshacer::{Deshacer, QueDeshacer};
 use finanzas_aplicacion::casos_de_uso::fondo::{
     ConsultarFondo, DepositarEnFondo, SacarDelFondo, SolicitudDeposito, SolicitudSacar,
@@ -178,6 +180,16 @@ async fn enrutar<C: Contexto>(ctx: &C, usuario: UsuarioId, p: Peticion<'_>) -> R
     let partes: Vec<&str> = p.ruta.trim_matches('/').split('/').collect();
     let respuesta = match partes.as_slice() {
         ["perfil"] => perfil(ctx, usuario, &p).await,
+        ["cortes", "hoy"] => match p.metodo {
+            Metodo::Get => Some(
+                ConsultarCortesHoy::new(ctx.perfiles(), ctx.reloj())
+                    .ejecutar(usuario)
+                    .await
+                    .map_err(ErrorApi::from)
+                    .and_then(|c| json(200, &CortesHoyDto::from(c))),
+            ),
+            _ => None,
+        },
         ["caja-chica" | "gastos" | "extras", ..] => registro(ctx, usuario, &p, &partes).await,
         ["fondo", ..] => fondo(ctx, usuario, &p, &partes).await,
         ["quincenas", ..] => quincenas(ctx, usuario, &p, &partes).await,
@@ -445,6 +457,7 @@ fn es_ruta_conocida(partes: &[&str]) -> bool {
             | ["fondo", "retiros" | "depositos"]
             | ["fondo", "movimientos", _]
             | ["quincenas", _, "marcas"]
+            | ["cortes", "hoy"]
     )
 }
 

@@ -2,6 +2,7 @@
 
 pub mod consultar_caja_chica;
 pub mod consultas;
+pub mod cortes;
 pub mod deshacer;
 pub mod fondo;
 pub mod perfil;

@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
 import type {
-  Caja, Extra, Fondo, Gasto, GastoRegistrado, MovimientoFondo, Perfil, PerfilPedido,
+  Caja, CortesHoy, Extra, Fondo, Gasto, GastoRegistrado, MovimientoFondo, Perfil, PerfilPedido,
   Quincena, Retiro,
 } from './api';
 
@@ -37,6 +37,10 @@ export class Finanzas {
 
   caja(): Observable<Caja> {
     return this.#get('/api/caja-chica');
+  }
+
+  cortesHoy(): Observable<CortesHoy> {
+    return this.#get('/api/cortes/hoy');
   }
 
   gastos(desde: string, hasta: string): Observable<Gasto[]> {

@@ -1,0 +1,117 @@
+<main class="pantalla">
+  <header class="encabezado">
+    <h1>Inicio</h1>
+    <p class="hoy">{{ hoy }}</p>
+  </header>
+
+  <div class="pila">
+    <!-- Caja chica -->
+    @let c = caja();
+    @if (c.estado === 'cargando') {
+      <fz-esqueleto alto="calc(var(--alto-renglon) * 2)" />
+    } @else if (c.estado === 'falla') {
+      <fz-tarjeta clave="Caja chica" [tenida]="true" tono="error">
+        <p class="falla" role="alert">{{ c.mensaje }}</p>
+      </fz-tarjeta>
+    } @else {
+      <fz-tarjeta clave="Caja chica" [monto]="c.valor.queda" [proporcion]="proporcionCaja()"
+                  [estado]="colorCaja(c.valor)" [nota]="notaCaja(c.valor)" />
+    }
+
+    <!-- Quincena actual: lleva a la pantalla Quincena -->
+    @let q = quincena();
+    <a class="enlace" routerLink="/quincena">
+      @if (q.estado === 'cargando') {
+        <fz-esqueleto alto="calc(var(--alto-renglon) * 2)" />
+      } @else if (q.estado === 'falla' && q.codigo === 'SIN_PRESUPUESTO') {
+        <fz-tarjeta clave="Quincena"
+                    nota="Todavía no armaste el presupuesto de esta quincena. Tocá para armarlo." />
+      } @else if (q.estado === 'falla') {
+        <fz-tarjeta clave="Quincena" [tenida]="true" tono="error">
+          <p class="falla" role="alert">{{ q.mensaje }}</p>
+        </fz-tarjeta>
+      } @else {
+        <fz-tarjeta [clave]="'Quincena del ' + (q.valor.pago | fechaCorta)"
+                    [monto]="q.valor.sobra" [tenida]="q.valor.sobra < 0" tono="error"
+                    [proporcion]="avance(q.valor)" [crece]="true">
+          <p class="detalle">{{ q.valor.sobra < 0 ? 'Va a faltar' : 'Sobra' }}</p>
+          <p class="detalle cifras">
+            Pagos · {{ q.valor.avance.hechos }} de {{ q.valor.avance.total }}
+            @if (q.valor.falta_por_pagar > 0) {
+              · faltan {{ q.valor.falta_por_pagar | colones }}
+            }
+          </p>
+        </fz-tarjeta>
+      }
+    </a>
+
+    <!-- Próximo pago y corte en curso -->
+    @let k = cortes();
+    @if (k.estado === 'cargando') {
+      <fz-esqueleto alto="calc(var(--alto-renglon) * 2)" />
+    } @else if (k.estado === 'falla') {
+      <fz-tarjeta clave="Próximo pago" [tenida]="true" tono="error">
+        <p class="falla" role="alert">{{ k.mensaje }}</p>
+      </fz-tarjeta>
+    } @else {
+      @if (k.valor.proximo_pago; as pago) {
+        <fz-tarjeta clave="Próximo pago" seccion="extra">
+          <p class="fecha">{{ pago.pago | fechaCorta }}</p>
+          <p class="detalle">{{ faltan(k.valor.dias_para_pago ?? 0) }}</p>
+          @if (k.valor.en_curso; as corte) {
+            <p class="detalle">
+              Las extras de hoy se reportan antes del {{ corte.reportar_antes | fechaCorta }}
+              y se pagan el {{ corte.pago | fechaCorta }}.
+            </p>
+          }
+        </fz-tarjeta>
+      } @else {
+        <fz-tarjeta clave="Próximo pago" [tenida]="true" tono="error"
+                    nota="El calendario de cortes ya no cubre las próximas fechas. Hay que cargar los cortes nuevos." />
+      }
+    }
+
+    <!-- Fondo de emergencia -->
+    @let f = fondo();
+    @if (f.estado === 'cargando') {
+      <fz-esqueleto alto="calc(var(--alto-renglon) * 2)" />
+    } @else if (f.estado === 'falla') {
+      <fz-tarjeta clave="Fondo de emergencia" [tenida]="true" tono="error">
+        <p class="falla" role="alert">{{ f.mensaje }}</p>
+      </fz-tarjeta>
+    } @else {
+      <fz-tarjeta clave="Fondo de emergencia" seccion="fondo" [monto]="f.valor.saldo">
+        <p class="detalle cifras">
+          @if (f.valor.por_reponer > 0) {
+            Por reponer {{ f.valor.por_reponer | colones }} · {{ f.valor.cuota_mensual | colones }} por mes
+          } @else {
+            Nada por reponer
+          }
+        </p>
+      </fz-tarjeta>
+    }
+  </div>
+
+  <!-- Gastos del periodo de la caja chica -->
+  @if (c.estado !== 'falla') {
+    @let g = gastos();
+    <fz-grupo titulo="Gastos de esta caja chica">
+      @if (g.estado === 'cargando') {
+        <fz-renglon><fz-esqueleto alto="var(--margen)" class="ancho" /></fz-renglon>
+      } @else if (g.estado === 'falla') {
+        <fz-renglon><span class="falla" role="alert">{{ g.mensaje }}</span></fz-renglon>
+      } @else {
+        @for (gasto of gastosRecientes(); track gasto.id) {
+          <fz-renglon [conIcono]="true" data-seccion="gasto">
+            <span slot="icono" class="icono-seccion" aria-hidden="true">{{ categorias[gasto.categoria][0] }}</span>
+            <span class="linea-1">{{ gasto.concepto }}</span>
+            <span class="linea-2">{{ categorias[gasto.categoria] }} · {{ gasto.fecha | fechaCorta }}</span>
+            <span slot="valor" class="cifras">{{ gasto.monto | colones }}</span>
+          </fz-renglon>
+        } @empty {
+          <fz-renglon><span class="vacio">Todavía no anotaste gastos en este periodo.</span></fz-renglon>
+        }
+      }
+    </fz-grupo>
+  }
+</main>

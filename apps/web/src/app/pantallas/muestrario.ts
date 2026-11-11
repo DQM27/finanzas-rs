@@ -67,8 +67,8 @@ type Mitad = 'Q1' | 'Q2';
         @for (m of movimientos; track m.concepto) {
           <fz-renglon [conIcono]="true" [attr.data-seccion]="m.seccion">
             <span slot="icono" class="icono-seccion" aria-hidden="true">{{ m.letra }}</span>
-            <span class="principal">{{ m.concepto }}</span>
-            <span class="secundario">{{ m.detalle }}</span>
+            <span class="linea-1">{{ m.concepto }}</span>
+            <span class="linea-2">{{ m.detalle }}</span>
             <span slot="valor" class="cifras" [class.negativo]="m.monto < 0">{{ m.monto | colones }}</span>
           </fz-renglon>
         }
@@ -114,27 +114,8 @@ type Mitad = 'Q1' | 'Q2';
       font: var(--cuerpo-chico);
       color: var(--texto-2);
     }
-    .icono-seccion {
-      display: inline-grid;
-      flex: none;
-      place-items: center;
-      width: var(--icono-renglon);
-      height: var(--icono-renglon);
-      border-radius: var(--radio-icono);
-      background: color-mix(in srgb, var(--seccion) 22%, transparent);
-      color: var(--seccion);
-      font: var(--etiqueta);
-    }
-    .principal {
-      display: block;
-    }
     .negativo {
       color: var(--error);
-    }
-    .secundario {
-      display: block;
-      font: var(--cuerpo-chico);
-      color: var(--texto-2);
     }
   `,
 })

@@ -28,7 +28,7 @@ Estados: ✅ implementada y probada · 🕓 acordada, falta implementar.
 
 | Código | Regla | Dónde | Estado |
 |---|---|---|---|
-| C1 | Lo trabajado entre el inicio y el fin de un corte se paga en la fecha de pago de ese corte. | `CalendarioCortes::corte_de` | ✅ |
+| C1 | Lo trabajado entre el inicio y el fin de un corte se paga en la fecha de pago de ese corte. | `CalendarioCortes::corte_de`, API `/cortes/hoy` | ✅ |
 | C2 | Un corte válido: fin ≥ inicio, reportar antes ≥ fin, pago ≥ reportar antes. | `Corte::new` | ✅ |
 | C3 | Los cortes son seguidos: cada uno empieza el día después del anterior, sin huecos ni traslapes. | `CalendarioCortes::new` | ✅ |
 | C4 | El periodo de gasto va del último día de pago (incluido) al día antes del siguiente. | `CalendarioCortes::periodo_de_gasto` | ✅ |

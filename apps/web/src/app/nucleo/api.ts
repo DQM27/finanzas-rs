@@ -109,6 +109,16 @@ export interface Perfil {
   cubre_hasta: string | null;
 }
 
+/** `GET /cortes/hoy`: el calendario visto desde hoy. */
+export interface CortesHoy {
+  /** El corte en que cae hoy: lo trabajado hoy se reporta y se paga según él. */
+  en_curso: Corte | null;
+  /** El próximo pago, hoy incluido. */
+  proximo_pago: Corte | null;
+  /** Días hasta ese pago (0 si es hoy). */
+  dias_para_pago: number | null;
+}
+
 /** El cuerpo de `PUT /perfil`: el perfil sin lo que calcula el dominio. */
 export type PerfilPedido = Omit<Perfil, 'salario_neto' | 'cubre_hasta'>;
 
