@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import type { Mes as DatosMes, Quincena } from '../nucleo/api';
+import type { Mes as DatosMes, Quincena } from '../../nucleo/api';
 import { Mes, mesVecino, nombreDelMes } from './mes';
 
 const Q1: Quincena = {
@@ -104,9 +104,9 @@ describe('Mes', () => {
 
   it('marca un pago y vuelve a pedir el mes', async () => {
     const { fixture, pagina } = await montar();
-    const comida = [...pagina.querySelectorAll<HTMLButtonElement>('.quincena [role="checkbox"]')].find(
-      (b) => b.getAttribute('aria-label') === 'COMIDA',
-    )!;
+    const comida = [
+      ...pagina.querySelectorAll<HTMLButtonElement>('.quincena [role="checkbox"]'),
+    ].find((b) => b.getAttribute('aria-label') === 'COMIDA')!;
     expect(comida.getAttribute('aria-checked')).toBe('false');
     comida.click();
     const pedido = http.expectOne('/api/quincenas/2026-11-13/marcas');

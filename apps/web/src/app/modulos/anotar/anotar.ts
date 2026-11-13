@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
-import type { Categoria, Origen, TipoExtra } from '../nucleo/api';
-import { CATEGORIAS, ORIGENES, TIPOS_EXTRA } from '../nucleo/etiquetas';
-import { FallaApi, Finanzas } from '../nucleo/finanzas';
-import { colones, fechaCorta, hoy, leerMonto } from '../nucleo/formato';
-import { Avisos } from '../ui/aviso';
-import { Boton } from '../ui/boton';
-import { Grupo } from '../ui/grupo';
-import { Icono } from '../ui/icono';
-import { Renglon } from '../ui/renglon';
-import { Segmentado, Segmento } from '../ui/segmentado';
+import type { Categoria, Origen, TipoExtra } from '../../nucleo/api';
+import { CATEGORIAS, ORIGENES, TIPOS_EXTRA } from '../../nucleo/etiquetas';
+import { FallaApi, Finanzas } from '../../nucleo/finanzas';
+import { colones, fechaCorta, hoy, leerMonto } from '../../nucleo/formato';
+import { Avisos } from '../../ui/aviso';
+import { Boton } from '../../ui/boton';
+import { Grupo } from '../../ui/grupo';
+import { Icono } from '../../ui/icono';
+import { Renglon } from '../../ui/renglon';
+import { Segmentado, Segmento } from '../../ui/segmentado';
 
 type Que = 'gasto' | 'extra';
 

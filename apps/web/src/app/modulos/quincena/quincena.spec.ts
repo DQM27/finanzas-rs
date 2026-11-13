@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
-import { Avisos } from '../ui/aviso';
+import { Avisos } from '../../ui/aviso';
 import { Quincena, lineasDe } from './quincena';
 
 const corte = (pago: string) => ({ inicio: pago, fin: pago, reportar_antes: pago, pago });
@@ -177,7 +177,9 @@ describe('Quincena', () => {
     const { fixture, pagina } = await montar();
     http.expectOne('/api/quincenas/2026-12-15').flush({ ...PRESUPUESTO, pago: '2026-12-15' });
     await fixture.whenStable();
-    const opciones = [...pagina.querySelectorAll('fz-segmentado [role="radio"]')].map((b) => b.textContent?.trim());
+    const opciones = [...pagina.querySelectorAll('fz-segmentado [role="radio"]')].map((b) =>
+      b.textContent?.trim(),
+    );
     expect(opciones).toEqual(['Esta quincena', 'La del LUN 30 nov', 'La del MAR 15 dic']);
     expect(pagina.querySelector('.resumen .clave')?.textContent).toContain('MAR 15 dic');
   });

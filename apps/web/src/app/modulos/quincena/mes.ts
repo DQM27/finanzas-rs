@@ -2,17 +2,17 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toObservable } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import type { Lado, Linea, Quincena } from '../nucleo/api';
-import { recargable, valor } from '../nucleo/carga';
-import { FallaApi, Finanzas } from '../nucleo/finanzas';
-import { ColonesPipe, FechaCortaPipe } from '../nucleo/formato';
-import { Avisos } from '../ui/aviso';
-import { Casilla } from '../ui/casilla';
-import { Esqueleto } from '../ui/esqueleto';
-import { Grupo } from '../ui/grupo';
-import { Icono } from '../ui/icono';
-import { Renglon } from '../ui/renglon';
-import { Tarjeta } from '../ui/tarjeta';
+import type { Lado, Linea, Quincena } from '../../nucleo/api';
+import { recargable, valor } from '../../nucleo/carga';
+import { FallaApi, Finanzas } from '../../nucleo/finanzas';
+import { ColonesPipe, FechaCortaPipe } from '../../nucleo/formato';
+import { Avisos } from '../../ui/aviso';
+import { Casilla } from '../../ui/casilla';
+import { Esqueleto } from '../../ui/esqueleto';
+import { Grupo } from '../../ui/grupo';
+import { Icono } from '../../ui/icono';
+import { Renglon } from '../../ui/renglon';
+import { Tarjeta } from '../../ui/tarjeta';
 
 /** El mes `AAAA-MM` que queda `pasos` meses antes (negativo) o después. */
 export function mesVecino(mes: string, pasos: number): string {
@@ -40,7 +40,15 @@ export function nombreDelMes(mes: string): string {
   selector: 'fz-mes',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Casilla, ColonesPipe, Esqueleto, FechaCortaPipe, Grupo, Icono, Renglon, RouterLink, Tarjeta,
+    Casilla,
+    ColonesPipe,
+    Esqueleto,
+    FechaCortaPipe,
+    Grupo,
+    Icono,
+    Renglon,
+    RouterLink,
+    Tarjeta,
   ],
   templateUrl: './mes.html',
   styleUrl: './mes.scss',

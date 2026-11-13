@@ -2,10 +2,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import type { Perfil } from '../nucleo/api';
-import { leerPorcentaje, porcentaje } from '../nucleo/formato';
-import { Nivel } from '../nucleo/nivel';
-import { Avisos } from '../ui/aviso';
+import type { Perfil } from '../../nucleo/api';
+import { leerPorcentaje, porcentaje } from '../../nucleo/formato';
+import { Nivel } from '../../nucleo/nivel';
+import { Avisos } from '../../ui/aviso';
 import { Configuracion, FACTOR_ILEGIBLE, borradorDe, pedidoDe } from './configuracion';
 
 const PERFIL: Perfil = {

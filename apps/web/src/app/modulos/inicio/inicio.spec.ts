@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Avisos } from '../ui/aviso';
+import { Avisos } from '../../ui/aviso';
 import { Inicio } from './inicio';
 
 const CAJA = { desde: '2026-11-13', hasta: '2026-11-29', queda: 4000, exceso: 0, nivel: 'BAJA' };
@@ -26,8 +26,22 @@ const QUINCENA = {
   avance: { hechos: 3, total: 9 },
 };
 const GASTOS = [
-  { id: 'a', fecha: '2026-11-13', concepto: 'ALMUERZO', monto: 3500, categoria: 'COMIDA', origen: 'CUENTA_GASTOS' },
-  { id: 'b', fecha: '2026-11-14', concepto: 'PASES', monto: 1500, categoria: 'TRAMITES', origen: 'CUENTA_GASTOS' },
+  {
+    id: 'a',
+    fecha: '2026-11-13',
+    concepto: 'ALMUERZO',
+    monto: 3500,
+    categoria: 'COMIDA',
+    origen: 'CUENTA_GASTOS',
+  },
+  {
+    id: 'b',
+    fecha: '2026-11-14',
+    concepto: 'PASES',
+    monto: 1500,
+    categoria: 'TRAMITES',
+    origen: 'CUENTA_GASTOS',
+  },
 ];
 
 const NO_ENCONTRADO = { status: 404, statusText: 'Not Found' };
@@ -108,7 +122,9 @@ describe('Inicio', () => {
     const { fixture, pagina } = await montar();
     http.expectOne('/api/caja-chica').flush(CAJA);
     http.expectOne('/api/perfil').flush({ tope_caja_chica: 5000 });
-    http.expectOne('/api/cortes/hoy').flush({ en_curso: CORTE, proximo_pago: CORTE, dias_para_pago: 15 });
+    http
+      .expectOne('/api/cortes/hoy')
+      .flush({ en_curso: CORTE, proximo_pago: CORTE, dias_para_pago: 15 });
     http.expectOne('/api/quincenas/actual').flush(QUINCENA);
     http.expectOne('/api/fondo').flush({ saldo: 0, por_reponer: 0, cuota_mensual: 0 });
     await fixture.whenStable();
@@ -122,7 +138,9 @@ describe('Inicio', () => {
 
     confirmar.mockReturnValueOnce(true);
     pagina.querySelector<HTMLButtonElement>('[aria-label="Deshacer PASES"]')!.click();
-    http.expectOne({ method: 'DELETE', url: '/api/gastos/b' }).flush(null, { status: 204, statusText: 'No Content' });
+    http
+      .expectOne({ method: 'DELETE', url: '/api/gastos/b' })
+      .flush(null, { status: 204, statusText: 'No Content' });
     http.expectOne('/api/caja-chica').flush({ ...CAJA, queda: 5000, nivel: 'HOLGADA' });
     await fixture.whenStable();
     http.expectOne('/api/gastos/2026-11-13/2026-11-29').flush([GASTOS[0]]);
@@ -130,7 +148,9 @@ describe('Inicio', () => {
 
     expect(TestBed.inject(Avisos).actual()?.texto).toBe('Gasto deshecho');
     expect(tarjeta(pagina, 'Caja chica').querySelector('.cifra')?.textContent).toContain('₡5,000');
-    const gastos = [...pagina.querySelectorAll('fz-grupo .linea-1')].map((e) => e.textContent?.trim());
+    const gastos = [...pagina.querySelectorAll('fz-grupo .linea-1')].map((e) =>
+      e.textContent?.trim(),
+    );
     expect(gastos).toEqual(['ALMUERZO']);
     confirmar.mockRestore();
   });
@@ -139,7 +159,9 @@ describe('Inicio', () => {
     const { fixture, pagina } = await montar();
     http.expectOne('/api/caja-chica').flush(CAJA);
     http.expectOne('/api/perfil').flush({ tope_caja_chica: 5000 });
-    http.expectOne('/api/cortes/hoy').flush({ en_curso: null, proximo_pago: null, dias_para_pago: null });
+    http
+      .expectOne('/api/cortes/hoy')
+      .flush({ en_curso: null, proximo_pago: null, dias_para_pago: null });
     http.expectOne('/api/quincenas/actual').flush({
       ...QUINCENA,
       presupuestada: false,
@@ -167,9 +189,14 @@ describe('Inicio', () => {
     const { fixture, pagina } = await montar();
     http
       .expectOne('/api/caja-chica')
-      .flush({ codigo: 'FUERA_DE_CALENDARIO', mensaje: 'hoy no cae en ningún periodo' }, NO_ENCONTRADO);
+      .flush(
+        { codigo: 'FUERA_DE_CALENDARIO', mensaje: 'hoy no cae en ningún periodo' },
+        NO_ENCONTRADO,
+      );
     http.expectOne('/api/perfil').flush({ tope_caja_chica: 5000 });
-    http.expectOne('/api/cortes/hoy').flush({ en_curso: CORTE, proximo_pago: CORTE, dias_para_pago: 1 });
+    http
+      .expectOne('/api/cortes/hoy')
+      .flush({ en_curso: CORTE, proximo_pago: CORTE, dias_para_pago: 1 });
     http.expectOne('/api/quincenas/actual').flush(QUINCENA);
     http.expectOne('/api/fondo').flush({ saldo: 100000, por_reponer: 30000, cuota_mensual: 10000 });
     await fixture.whenStable();

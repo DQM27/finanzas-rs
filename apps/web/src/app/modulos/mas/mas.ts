@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Grupo } from '../ui/grupo';
-import { Renglon } from '../ui/renglon';
+import { Grupo } from '../../ui/grupo';
+import { Renglon } from '../../ui/renglon';
 
 /**
  * «Más»: lo que no entra en la barra. Aquí van a quedar, en modo consulta,
@@ -18,7 +18,9 @@ import { Renglon } from '../ui/renglon';
         <fz-renglon [chevron]="true" (click)="ir('/configuracion')">Configuración</fz-renglon>
       </fz-grupo>
       <fz-grupo titulo="Desarrollo">
-        <fz-renglon [chevron]="true" (click)="ir('/muestrario')">Muestrario de componentes</fz-renglon>
+        <fz-renglon [chevron]="true" (click)="ir('/muestrario')"
+          >Muestrario de componentes</fz-renglon
+        >
       </fz-grupo>
     </main>
   `,

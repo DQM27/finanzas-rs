@@ -24,7 +24,7 @@ import {
   type RowClassParams,
 } from 'ag-grid-community';
 import { AgGridAngular } from 'ag-grid-angular';
-import { Icono } from '../../ui/icono';
+import { Icono } from '../icono';
 import { claveDeColumna, normalizar, textoDeTooltip, tiposDeColumna } from './columnas';
 import { guardarDiseno, leerDiseno } from './diseno-guardado';
 

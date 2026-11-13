@@ -1,8 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { hoy, leerMonto } from '../nucleo/formato';
-import { Avisos } from '../ui/aviso';
+import { hoy, leerMonto } from '../../nucleo/formato';
+import { Avisos } from '../../ui/aviso';
 import { Anotar } from './anotar';
 
 describe('leerMonto', () => {
@@ -33,7 +33,9 @@ describe('Anotar', () => {
     await fixture.whenStable();
     const pagina = fixture.nativeElement as HTMLElement;
     const escribir = async (nombre: string, texto: string) => {
-      const campo = pagina.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${nombre}"]`)!;
+      const campo = pagina.querySelector<HTMLInputElement | HTMLSelectElement>(
+        `[name="${nombre}"]`,
+      )!;
       campo.value = texto;
       campo.dispatchEvent(new Event(campo instanceof HTMLSelectElement ? 'change' : 'input'));
       await fixture.whenStable();
@@ -65,7 +67,14 @@ describe('Anotar', () => {
 
     pedido.flush(
       {
-        gasto: { id: 'g', fecha: hoy(), concepto: 'ALMUERZO', monto: 3500, categoria: 'COMIDA', origen: 'CUENTA_GASTOS' },
+        gasto: {
+          id: 'g',
+          fecha: hoy(),
+          concepto: 'ALMUERZO',
+          monto: 3500,
+          categoria: 'COMIDA',
+          origen: 'CUENTA_GASTOS',
+        },
         caja: { desde: hoy(), hasta: hoy(), queda: 1500, exceso: 0, nivel: 'BAJA' },
       },
       { status: 201, statusText: 'Created' },
@@ -89,7 +98,14 @@ describe('Anotar', () => {
     const pedido = http.expectOne('/api/extras');
     expect(pedido.request.body).toEqual({ fecha: hoy(), tipo: 'NOCTURNA', monto: null });
     pedido.flush(
-      { id: 'e', fecha: hoy(), tipo: 'NOCTURNA', bruto: 25800, neto: 22232, fecha_pago: '2026-11-30' },
+      {
+        id: 'e',
+        fecha: hoy(),
+        tipo: 'NOCTURNA',
+        bruto: 25800,
+        neto: 22232,
+        fecha_pago: '2026-11-30',
+      },
       { status: 201, statusText: 'Created' },
     );
     await fixture.whenStable();

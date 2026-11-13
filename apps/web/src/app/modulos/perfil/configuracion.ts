@@ -1,19 +1,24 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import type { Corte, Perfil, PerfilPedido } from '../nucleo/api';
-import { Carga } from '../nucleo/carga';
-import { FallaApi, Finanzas } from '../nucleo/finanzas';
+import type { Corte, Perfil, PerfilPedido } from '../../nucleo/api';
+import { Carga } from '../../nucleo/carga';
+import { FallaApi, Finanzas } from '../../nucleo/finanzas';
 import {
-  ColonesPipe, FechaCortaPipe, hoy, leerMonto, leerPorcentaje, porcentaje,
-} from '../nucleo/formato';
-import { Nivel } from '../nucleo/nivel';
-import { Avisos } from '../ui/aviso';
-import { Boton } from '../ui/boton';
-import { Esqueleto } from '../ui/esqueleto';
-import { Grupo } from '../ui/grupo';
-import { Icono } from '../ui/icono';
-import { Renglon } from '../ui/renglon';
-import { Tarjeta } from '../ui/tarjeta';
+  ColonesPipe,
+  FechaCortaPipe,
+  hoy,
+  leerMonto,
+  leerPorcentaje,
+  porcentaje,
+} from '../../nucleo/formato';
+import { Nivel } from '../../nucleo/nivel';
+import { Avisos } from '../../ui/aviso';
+import { Boton } from '../../ui/boton';
+import { Esqueleto } from '../../ui/esqueleto';
+import { Grupo } from '../../ui/grupo';
+import { Icono } from '../../ui/icono';
+import { Renglon } from '../../ui/renglon';
+import { Tarjeta } from '../../ui/tarjeta';
 
 /** Cuántos cortes se ven antes de «Ver todos». */
 const CORTES_A_LA_VISTA = 6;
@@ -84,7 +89,15 @@ type CampoMonto = Exclude<keyof Borrador, 'cortes'>;
   selector: 'fz-configuracion',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Boton, ColonesPipe, Esqueleto, FechaCortaPipe, FormsModule, Grupo, Icono, Renglon, Tarjeta,
+    Boton,
+    ColonesPipe,
+    Esqueleto,
+    FechaCortaPipe,
+    FormsModule,
+    Grupo,
+    Icono,
+    Renglon,
+    Tarjeta,
   ],
   templateUrl: './configuracion.html',
   styleUrl: './configuracion.scss',
@@ -153,7 +166,9 @@ export class Configuracion {
 
   protected agregarCorte(): void {
     this.borrador.update((b) =>
-      b ? { ...b, cortes: [...b.cortes, { inicio: '', fin: '', reportar_antes: '', pago: '' }] } : b,
+      b
+        ? { ...b, cortes: [...b.cortes, { inicio: '', fin: '', reportar_antes: '', pago: '' }] }
+        : b,
     );
   }
 

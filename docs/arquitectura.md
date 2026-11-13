@@ -111,6 +111,21 @@ sabe de `base` más de lo que `base` ofrece. La regla para saber dónde va algo 
 **lo que decide sobre un tema vive en el módulo de ese tema**, en la capa que le
 toque. Si no se sabe de qué tema es, probablemente son dos cosas mezcladas.
 
+Los mismos temas se repiten en cada capa, así que un cambio se sigue de arriba abajo
+por el mismo nombre:
+
+```text
+crates/dominio/src/gastos.rs      la regla
+crates/aplicacion/.../gastos.rs   el caso de uso
+crates/api/src/gastos.rs          el JSON y la ruta
+apps/web/src/app/modulos/gastos/  la pantalla
+```
+
+En la web, un módulo guarda **las dos versiones de su tema**: la del celular y la de
+la computadora juntas. Antes estaban partidas en `pantallas/` y `escritorio/`, así que
+el mismo tema vivía en dos carpetas que no se hablaban. Lo que no es de un tema queda
+aparte: `nucleo/` (API, formato, tipos) y `ui/` (los componentes visuales).
+
 ---
 
 ## 4. Patrones

@@ -2,14 +2,14 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import type { ColDef } from 'ag-grid-community';
 import { BehaviorSubject } from 'rxjs';
-import type { Extra, TipoExtra } from '../nucleo/api';
-import { recargable, valor } from '../nucleo/carga';
-import { TIPOS_EXTRA } from '../nucleo/etiquetas';
-import { FallaApi, Finanzas } from '../nucleo/finanzas';
-import { colones, fechaCorta, hoy, leerMonto } from '../nucleo/formato';
-import { Avisos } from '../ui/aviso';
-import { CeldaDeshacer, ParametrosDeshacer } from './tabla/celda-deshacer';
-import { Tabla } from './tabla/tabla';
+import type { Extra, TipoExtra } from '../../nucleo/api';
+import { recargable, valor } from '../../nucleo/carga';
+import { TIPOS_EXTRA } from '../../nucleo/etiquetas';
+import { FallaApi, Finanzas } from '../../nucleo/finanzas';
+import { colones, fechaCorta, hoy, leerMonto } from '../../nucleo/formato';
+import { Avisos } from '../../ui/aviso';
+import { CeldaDeshacer, ParametrosDeshacer } from '../../ui/tabla/celda-deshacer';
+import { Tabla } from '../../ui/tabla/tabla';
 
 /**
  * Extras en la computadora: la grilla de todas, con su neto y su fecha de
@@ -25,16 +25,24 @@ import { Tabla } from './tabla/tabla';
 
       <form class="alta" (ngSubmit)="anotar()" aria-label="Anotar una extra">
         <label>Fecha <input type="date" name="fecha" [(ngModel)]="fecha" /></label>
-        <label>Tipo
+        <label
+          >Tipo
           <select name="tipo" [(ngModel)]="tipo">
             @for (t of tipos; track t[0]) {
               <option [value]="t[0]">{{ t[1] }}</option>
             }
           </select>
         </label>
-        <label>Monto bruto
-          <input class="cifras" name="monto" inputmode="numeric" autocomplete="off"
-                 [placeholder]="tipo === 'OTRA' ? 'Requerido' : 'Según tarifa'" [(ngModel)]="monto" />
+        <label
+          >Monto bruto
+          <input
+            class="cifras"
+            name="monto"
+            inputmode="numeric"
+            autocomplete="off"
+            [placeholder]="tipo === 'OTRA' ? 'Requerido' : 'Según tarifa'"
+            [(ngModel)]="monto"
+          />
         </label>
         <button type="submit" class="guardar" [disabled]="guardando()">
           {{ guardando() ? 'Guardando…' : 'Anotar extra' }}
@@ -44,12 +52,19 @@ import { Tabla } from './tabla/tabla';
         }
       </form>
 
-      <fz-tabla etiqueta="Extras" id="extras" [columnas]="columnas" [filas]="filas()"
-                [cargando]="cargando()" [idFila]="idFila" mensajeVacio="Todavía no hay extras"
-                marcador="Buscar por tipo o fecha…" />
+      <fz-tabla
+        etiqueta="Extras"
+        id="extras"
+        [columnas]="columnas"
+        [filas]="filas()"
+        [cargando]="cargando()"
+        [idFila]="idFila"
+        mensajeVacio="Todavía no hay extras"
+        marcador="Buscar por tipo o fecha…"
+      />
     </main>
   `,
-  styleUrl: './alta.scss',
+  styleUrl: '../../ui/tabla/alta.scss',
 })
 export class Extras {
   readonly #finanzas = inject(Finanzas);
@@ -117,7 +132,8 @@ export class Extras {
   }
 
   protected deshacer(e: Extra): void {
-    if (!confirm(`¿Deshacer la extra del ${fechaCorta(e.fecha)} (${colones(e.bruto)} bruto)?`)) return;
+    if (!confirm(`¿Deshacer la extra del ${fechaCorta(e.fecha)} (${colones(e.bruto)} bruto)?`))
+      return;
     this.#finanzas.borrarExtra(e.id).subscribe({
       next: () => {
         this.#avisos.exito('Extra deshecha');

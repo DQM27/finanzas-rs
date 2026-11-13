@@ -2,17 +2,17 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { toObservable } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { BehaviorSubject, filter, map } from 'rxjs';
-import type { Caja, Gasto, NivelCaja, Quincena } from '../nucleo/api';
-import { cargar, recargable, valor } from '../nucleo/carga';
-import { CATEGORIAS, faltan } from '../nucleo/etiquetas';
-import { FallaApi, Finanzas } from '../nucleo/finanzas';
-import { ColonesPipe, FechaCortaPipe, colones, fechaCorta, hoy } from '../nucleo/formato';
-import { Avisos } from '../ui/aviso';
-import { Esqueleto } from '../ui/esqueleto';
-import { Grupo } from '../ui/grupo';
-import { Icono } from '../ui/icono';
-import { Renglon } from '../ui/renglon';
-import { EstadoBarra, Tarjeta } from '../ui/tarjeta';
+import type { Caja, Gasto, NivelCaja, Quincena } from '../../nucleo/api';
+import { cargar, recargable, valor } from '../../nucleo/carga';
+import { CATEGORIAS, faltan } from '../../nucleo/etiquetas';
+import { FallaApi, Finanzas } from '../../nucleo/finanzas';
+import { ColonesPipe, FechaCortaPipe, colones, fechaCorta, hoy } from '../../nucleo/formato';
+import { Avisos } from '../../ui/aviso';
+import { Esqueleto } from '../../ui/esqueleto';
+import { Grupo } from '../../ui/grupo';
+import { Icono } from '../../ui/icono';
+import { Renglon } from '../../ui/renglon';
+import { EstadoBarra, Tarjeta } from '../../ui/tarjeta';
 
 /** El nivel que decide el dominio, en el color de la barra. */
 const COLOR_CAJA: Record<NivelCaja, EstadoBarra> = {

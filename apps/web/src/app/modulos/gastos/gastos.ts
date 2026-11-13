@@ -3,14 +3,14 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import type { ColDef } from 'ag-grid-community';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import type { Categoria, Gasto, Origen } from '../nucleo/api';
-import { recargable, valor } from '../nucleo/carga';
-import { CATEGORIAS, ORIGENES } from '../nucleo/etiquetas';
-import { FallaApi, Finanzas } from '../nucleo/finanzas';
-import { colones, fechaCorta, hoy, leerMonto } from '../nucleo/formato';
-import { Avisos } from '../ui/aviso';
-import { CeldaDeshacer, ParametrosDeshacer } from './tabla/celda-deshacer';
-import { Tabla } from './tabla/tabla';
+import type { Categoria, Gasto, Origen } from '../../nucleo/api';
+import { recargable, valor } from '../../nucleo/carga';
+import { CATEGORIAS, ORIGENES } from '../../nucleo/etiquetas';
+import { FallaApi, Finanzas } from '../../nucleo/finanzas';
+import { colones, fechaCorta, hoy, leerMonto } from '../../nucleo/formato';
+import { Avisos } from '../../ui/aviso';
+import { CeldaDeshacer, ParametrosDeshacer } from '../../ui/tabla/celda-deshacer';
+import { Tabla } from '../../ui/tabla/tabla';
 
 /** El primer y el último día del mes de una fecha `AAAA-MM-DD`. */
 export function mesDe(fecha: string): { desde: string; hasta: string } {
@@ -34,22 +34,38 @@ export function mesDe(fecha: string): { desde: string; hasta: string } {
 
       <form class="alta" (ngSubmit)="anotar()" aria-label="Anotar un gasto">
         <label>Fecha <input type="date" name="fecha" [(ngModel)]="fecha" /></label>
-        <label>Concepto
-          <input class="ancho" name="concepto" maxlength="80" autocomplete="off" placeholder="Requerido"
-                 [(ngModel)]="concepto" />
+        <label
+          >Concepto
+          <input
+            class="ancho"
+            name="concepto"
+            maxlength="80"
+            autocomplete="off"
+            placeholder="Requerido"
+            [(ngModel)]="concepto"
+          />
         </label>
-        <label>Monto
-          <input class="cifras" name="monto" inputmode="numeric" autocomplete="off" placeholder="Requerido"
-                 [(ngModel)]="monto" />
+        <label
+          >Monto
+          <input
+            class="cifras"
+            name="monto"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="Requerido"
+            [(ngModel)]="monto"
+          />
         </label>
-        <label>Categoría
+        <label
+          >Categoría
           <select name="categoria" [(ngModel)]="categoria">
             @for (c of categorias; track c[0]) {
               <option [value]="c[0]">{{ c[1] }}</option>
             }
           </select>
         </label>
-        <label>Salió de
+        <label
+          >Salió de
           <select name="origen" [(ngModel)]="origen">
             @for (o of origenes; track o[0]) {
               <option [value]="o[0]">{{ o[1] }}</option>
@@ -64,17 +80,30 @@ export function mesDe(fecha: string): { desde: string; hasta: string } {
         }
       </form>
 
-      <fz-tabla etiqueta="Gastos" id="gastos" [columnas]="columnas" [filas]="filas()"
-                [cargando]="cargando()" [idFila]="idFila" mensajeVacio="No hay gastos en estas fechas"
-                marcador="Buscar por concepto, categoría…">
+      <fz-tabla
+        etiqueta="Gastos"
+        id="gastos"
+        [columnas]="columnas"
+        [filas]="filas()"
+        [cargando]="cargando()"
+        [idFila]="idFila"
+        mensajeVacio="No hay gastos en estas fechas"
+        marcador="Buscar por concepto, categoría…"
+      >
         <div controles class="rango-controles">
-          <label>Desde <input type="date" [value]="desde()" (change)="desde.set($any($event.target).value)" /></label>
-          <label>Hasta <input type="date" [value]="hasta()" (change)="hasta.set($any($event.target).value)" /></label>
+          <label
+            >Desde
+            <input type="date" [value]="desde()" (change)="desde.set($any($event.target).value)"
+          /></label>
+          <label
+            >Hasta
+            <input type="date" [value]="hasta()" (change)="hasta.set($any($event.target).value)"
+          /></label>
         </div>
       </fz-tabla>
     </main>
   `,
-  styleUrl: './alta.scss',
+  styleUrl: '../../ui/tabla/alta.scss',
   styles: `
     .rango-controles {
       display: flex;
@@ -171,7 +200,8 @@ export class Gastos {
   }
 
   protected deshacer(g: Gasto): void {
-    if (!confirm(`¿Deshacer «${g.concepto}» del ${fechaCorta(g.fecha)} (${colones(g.monto)})?`)) return;
+    if (!confirm(`¿Deshacer «${g.concepto}» del ${fechaCorta(g.fecha)} (${colones(g.monto)})?`))
+      return;
     this.#finanzas.borrarGasto(g.id).subscribe({
       next: () => {
         this.#avisos.exito('Gasto deshecho');

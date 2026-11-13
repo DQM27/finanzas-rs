@@ -1,19 +1,26 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import type { Lado, Linea, Quincena as DatosQuincena } from '../nucleo/api';
-import { Carga, cargar, valor } from '../nucleo/carga';
-import { FallaApi, Finanzas } from '../nucleo/finanzas';
-import { ColonesPipe, FechaCortaPipe, fechaCorta, leerMonto } from '../nucleo/formato';
-import { Avisos } from '../ui/aviso';
-import { Boton } from '../ui/boton';
-import { Casilla } from '../ui/casilla';
-import { Esqueleto } from '../ui/esqueleto';
-import { Grupo } from '../ui/grupo';
-import { Icono } from '../ui/icono';
-import { Renglon } from '../ui/renglon';
-import { Segmentado, Segmento } from '../ui/segmentado';
-import { Tarjeta } from '../ui/tarjeta';
+import type { Lado, Linea, Quincena as DatosQuincena } from '../../nucleo/api';
+import { Carga, cargar, valor } from '../../nucleo/carga';
+import { FallaApi, Finanzas } from '../../nucleo/finanzas';
+import { ColonesPipe, FechaCortaPipe, fechaCorta, leerMonto } from '../../nucleo/formato';
+import { Avisos } from '../../ui/aviso';
+import { Boton } from '../../ui/boton';
+import { Casilla } from '../../ui/casilla';
+import { Esqueleto } from '../../ui/esqueleto';
+import { Grupo } from '../../ui/grupo';
+import { Icono } from '../../ui/icono';
+import { Renglon } from '../../ui/renglon';
+import { Segmentado, Segmento } from '../../ui/segmentado';
+import { Tarjeta } from '../../ui/tarjeta';
 
 /** Una línea del presupuesto mientras se escribe. */
 export interface Fila {
@@ -42,8 +49,17 @@ export function lineasDe(filas: readonly Fila[]): { concepto: string; monto: num
   selector: 'fz-quincena',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    Boton, Casilla, ColonesPipe, Esqueleto, FechaCortaPipe, FormsModule, Grupo, Icono, Renglon,
-    Segmentado, Tarjeta,
+    Boton,
+    Casilla,
+    ColonesPipe,
+    Esqueleto,
+    FechaCortaPipe,
+    FormsModule,
+    Grupo,
+    Icono,
+    Renglon,
+    Segmentado,
+    Tarjeta,
   ],
   templateUrl: './quincena.html',
   styleUrl: './quincena.scss',
@@ -63,7 +79,10 @@ export class Quincena {
     const opciones: Segmento<string>[] = [];
     if (c?.ultimo_pago) opciones.push({ valor: c.ultimo_pago.pago, etiqueta: 'Esta quincena' });
     if (c?.proximo_pago && c.proximo_pago.pago !== c.ultimo_pago?.pago) {
-      opciones.push({ valor: c.proximo_pago.pago, etiqueta: `La del ${fechaCorta(c.proximo_pago.pago)}` });
+      opciones.push({
+        valor: c.proximo_pago.pago,
+        etiqueta: `La del ${fechaCorta(c.proximo_pago.pago)}`,
+      });
     }
     const pedido = this.#pedido;
     if (c && pedido && !opciones.some((o) => o.valor === pedido)) {

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import type { ICellRendererAngularComp } from 'ag-grid-angular';
 import type { ICellRendererParams } from 'ag-grid-community';
-import { Icono } from '../../ui/icono';
+import { Icono } from '../icono';
 
 /** Lo que la columna le pasa a la celda (`cellRendererParams`). */
 export interface ParametrosDeshacer<T> {
@@ -17,7 +17,12 @@ export interface ParametrosDeshacer<T> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icono],
   template: `
-    <button type="button" [attr.aria-label]="'Deshacer ' + nombre" title="Deshacer" (click)="tocar()">
+    <button
+      type="button"
+      [attr.aria-label]="'Deshacer ' + nombre"
+      title="Deshacer"
+      (click)="tocar()"
+    >
       <fz-icono nombre="deshacer" />
     </button>
   `,
