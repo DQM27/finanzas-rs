@@ -6,12 +6,12 @@
 
 use crate::errores::ErrorRepositorio;
 use chrono::NaiveDate;
-use finanzas_dominio::extra::{Extra, ExtraId};
-use finanzas_dominio::gasto::{Gasto, GastoId};
-use finanzas_dominio::movimientos_fondo::{MovimientoFondo, MovimientoFondoId};
+use finanzas_dominio::base::usuario::UsuarioId;
+use finanzas_dominio::extras::{Extra, ExtraId};
+use finanzas_dominio::fondo::movimientos::{MovimientoFondo, MovimientoFondoId};
+use finanzas_dominio::gastos::{Gasto, GastoId};
 use finanzas_dominio::perfil::Perfil;
 use finanzas_dominio::quincena::Quincena;
-use finanzas_dominio::usuario::UsuarioId;
 use uuid::Uuid;
 
 /// La fecha de hoy, en la zona del usuario.

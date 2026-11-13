@@ -1,8 +1,10 @@
 //! Gastos puntuales: lo que no es fijo ni se repite.
 
-use crate::dinero::Colones;
-use crate::texto::Concepto;
-use crate::usuario::UsuarioId;
+pub mod caja_chica;
+
+use crate::base::dinero::Colones;
+use crate::base::texto::Concepto;
+use crate::base::usuario::UsuarioId;
 use chrono::NaiveDate;
 use thiserror::Error;
 use uuid::Uuid;
@@ -166,9 +168,9 @@ pub fn gastado_en_caja_chica(gastos: &[Gasto], desde: NaiveDate, hasta: NaiveDat
 #[cfg(test)]
 mod tests {
     use super::{Categoria, DatosGasto, ErrorGasto, Gasto, GastoId, Origen, gastado_en_caja_chica};
-    use crate::dinero::Colones;
-    use crate::texto::Concepto;
-    use crate::usuario::UsuarioId;
+    use crate::base::dinero::Colones;
+    use crate::base::texto::Concepto;
+    use crate::base::usuario::UsuarioId;
     use chrono::NaiveDate;
     use uuid::Uuid;
 

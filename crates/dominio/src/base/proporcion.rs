@@ -3,7 +3,7 @@
 //! `0.8617` se guarda como `8617`. Aplicarla a un monto redondea siempre igual:
 //! al colón más cercano y, en el empate, alejándose del cero.
 
-use crate::dinero::Colones;
+use crate::base::dinero::Colones;
 
 const ESCALA: i128 = 10_000;
 
@@ -59,7 +59,7 @@ impl Proporcion {
 #[cfg(test)]
 mod tests {
     use super::Proporcion;
-    use crate::dinero::Colones;
+    use crate::base::dinero::Colones;
 
     #[test]
     fn el_factor_neto_redondea_al_colon_mas_cercano() {

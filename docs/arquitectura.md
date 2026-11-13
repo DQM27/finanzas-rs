@@ -86,8 +86,30 @@ flowchart TB
 | `apps/web` *(siguiente)* | PWA en Angular; usa el dominio compilado a WASM para validar sin red | `dominio` vía WASM |
 
 La pureza del dominio la vigila `crates/dominio/tests/arquitectura.rs`: falla si el
-manifiesto gana una dependencia no permitida o si el código usa reloj, aleatoriedad,
-red, archivos o variables de entorno.
+manifiesto gana una dependencia no permitida, si el código usa reloj, aleatoriedad,
+red, archivos o variables de entorno, o si la búsqueda deja de entrar en las
+subcarpetas y algún módulo queda sin vigilar.
+
+### Los módulos, uno por tema
+
+Las capas dicen *hacia dónde* van las dependencias. Los módulos dicen *de qué*
+responde cada pedazo. Dentro de cada capa el código se agrupa por tema, no por el
+tipo de archivo ni por el aparato donde se ve:
+
+| Módulo | De qué responde |
+|---|---|
+| `base` | Plata, proporciones, conceptos y dueño: el vocabulario común |
+| `calendario` | Los cortes de la empresa: qué se reporta cuándo y qué día se paga |
+| `perfil` | Los números de cada persona: salario, tarifas y tope de caja chica |
+| `gastos` | Lo que se gasta en el día y la caja chica |
+| `extras` | Las extras trabajadas: cuánto dejan netas y en qué pago caen |
+| `quincena` | El presupuesto de cada pago y la suma del mes |
+| `fondo` | El fondo de emergencia: cuándo se puede sacar y cómo se repone |
+
+Un tema puede usar a otro (`extras` necesita `perfil` y `calendario`), pero nadie
+sabe de `base` más de lo que `base` ofrece. La regla para saber dónde va algo nuevo:
+**lo que decide sobre un tema vive en el módulo de ese tema**, en la capa que le
+toque. Si no se sabe de qué tema es, probablemente son dos cosas mezcladas.
 
 ---
 

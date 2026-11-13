@@ -114,7 +114,7 @@ fn texto(env: &Env, nombre: &str) -> Result<String, String> {
 async fn identificar(
     req: &Request,
     env: &Env,
-) -> Result<finanzas_dominio::usuario::UsuarioId, Fallo> {
+) -> Result<finanzas_dominio::base::usuario::UsuarioId, Fallo> {
     let config = ConfigAcceso {
         emisor: texto(env, "ACCESO_EMISOR").map_err(Fallo::Config)?,
         audiencia: texto(env, "ACCESO_AUDIENCIA").map_err(Fallo::Config)?,

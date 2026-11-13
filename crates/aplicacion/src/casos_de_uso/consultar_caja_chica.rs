@@ -3,9 +3,9 @@
 use crate::errores::ErrorAplicacion;
 use crate::puertos::{Reloj, RepositorioGastos, RepositorioPerfiles};
 use chrono::NaiveDate;
-use finanzas_dominio::caja_chica::EstadoCaja;
-use finanzas_dominio::gasto::gastado_en_caja_chica;
-use finanzas_dominio::usuario::UsuarioId;
+use finanzas_dominio::base::usuario::UsuarioId;
+use finanzas_dominio::gastos::caja_chica::EstadoCaja;
+use finanzas_dominio::gastos::gastado_en_caja_chica;
 
 /// El estado de la caja chica en el periodo de gasto actual.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

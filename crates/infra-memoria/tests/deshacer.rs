@@ -12,10 +12,10 @@ mod tests {
     use finanzas_aplicacion::errores::ErrorAplicacion;
     use finanzas_aplicacion::puertos::{GeneradorIds, RepositorioPerfiles};
     use finanzas_contrato::{DANIEL, OTRO, perfil};
-    use finanzas_dominio::dinero::Colones;
+    use finanzas_dominio::base::dinero::Colones;
+    use finanzas_dominio::fondo::movimientos::{ErrorFondo, MovimientoFondoId};
     use finanzas_dominio::fondo::{Evaluacion, NivelEmergencia};
-    use finanzas_dominio::gasto::{Categoria, GastoId, Origen};
-    use finanzas_dominio::movimientos_fondo::{ErrorFondo, MovimientoFondoId};
+    use finanzas_dominio::gastos::{Categoria, GastoId, Origen};
     use finanzas_infra_memoria::{
         ExtrasEnMemoria, FondoEnMemoria, GastosEnMemoria, IdsSecuenciales, PerfilesEnMemoria,
         RelojFijo,
@@ -47,7 +47,7 @@ mod tests {
 
         fn deshacer(
             &self,
-            usuario: finanzas_dominio::usuario::UsuarioId,
+            usuario: finanzas_dominio::base::usuario::UsuarioId,
             que: QueDeshacer,
         ) -> Result<(), ErrorAplicacion> {
             pollster::block_on(

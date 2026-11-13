@@ -10,12 +10,12 @@ use finanzas_aplicacion::puertos::{
     GeneradorIds, Reloj, RepositorioExtras, RepositorioFondo, RepositorioGastos,
     RepositorioPerfiles, RepositorioQuincenas,
 };
-use finanzas_dominio::extra::{Extra, ExtraId};
-use finanzas_dominio::gasto::{Gasto, GastoId};
-use finanzas_dominio::movimientos_fondo::{MovimientoFondo, MovimientoFondoId};
+use finanzas_dominio::base::usuario::UsuarioId;
+use finanzas_dominio::extras::{Extra, ExtraId};
+use finanzas_dominio::fondo::movimientos::{MovimientoFondo, MovimientoFondoId};
+use finanzas_dominio::gastos::{Gasto, GastoId};
 use finanzas_dominio::perfil::Perfil;
 use finanzas_dominio::quincena::Quincena;
-use finanzas_dominio::usuario::UsuarioId;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 use uuid::Uuid;

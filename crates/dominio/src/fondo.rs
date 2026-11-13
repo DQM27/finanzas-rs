@@ -5,8 +5,10 @@
 //! nadie, vuelve al fondo. Mientras haya una reposición pendiente no se saca
 //! otra vez, salvo una emergencia vital.
 
-use crate::dinero::Colones;
-use crate::proporcion::Proporcion;
+pub mod movimientos;
+
+use crate::base::dinero::Colones;
+use crate::base::proporcion::Proporcion;
 use thiserror::Error;
 
 /// Las tres preguntas antes de sacar del fondo.
@@ -147,7 +149,7 @@ pub fn decidir_retiro(s: SolicitudRetiro) -> Result<PlanReposicion, RechazoRetir
 #[cfg(test)]
 mod tests {
     use super::{Evaluacion, NivelEmergencia, RechazoRetiro, SolicitudRetiro, decidir_retiro};
-    use crate::dinero::Colones;
+    use crate::base::dinero::Colones;
 
     const TRES_SI: Evaluacion = Evaluacion {
         inesperado: true,

@@ -10,14 +10,14 @@ mod tests {
     use finanzas_aplicacion::casos_de_uso::registrar_extra::{RegistrarExtra, SolicitudExtra};
     use finanzas_aplicacion::casos_de_uso::registrar_gasto::{RegistrarGasto, SolicitudGasto};
     use finanzas_aplicacion::errores::ErrorAplicacion;
-    use finanzas_dominio::caja_chica::{CajaChica, NivelCaja};
+    use finanzas_dominio::base::dinero::Colones;
+    use finanzas_dominio::base::proporcion::Proporcion;
+    use finanzas_dominio::base::usuario::UsuarioId;
     use finanzas_dominio::calendario::{CalendarioCortes, Corte};
-    use finanzas_dominio::dinero::Colones;
-    use finanzas_dominio::extra::{ErrorExtra, TipoExtra};
-    use finanzas_dominio::gasto::{Categoria, Origen};
+    use finanzas_dominio::extras::{ErrorExtra, TipoExtra};
+    use finanzas_dominio::gastos::caja_chica::{CajaChica, NivelCaja};
+    use finanzas_dominio::gastos::{Categoria, Origen};
     use finanzas_dominio::perfil::{Perfil, PerfilSalarial, TarifasExtra};
-    use finanzas_dominio::proporcion::Proporcion;
-    use finanzas_dominio::usuario::UsuarioId;
     use finanzas_infra_memoria::{
         ExtrasEnMemoria, GastosEnMemoria, IdsSecuenciales, PerfilesEnMemoria, RelojFijo,
     };

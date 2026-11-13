@@ -5,11 +5,11 @@
 
 use crate::errores::ErrorAplicacion;
 use crate::puertos::{GeneradorIds, Reloj, RepositorioFondo};
-use finanzas_dominio::dinero::Colones;
+use finanzas_dominio::base::dinero::Colones;
+use finanzas_dominio::base::texto::Concepto;
+use finanzas_dominio::base::usuario::UsuarioId;
+use finanzas_dominio::fondo::movimientos::{EstadoFondo, MovimientoFondo, MovimientoFondoId};
 use finanzas_dominio::fondo::{Evaluacion, NivelEmergencia, PlanReposicion, decidir_retiro};
-use finanzas_dominio::movimientos_fondo::{EstadoFondo, MovimientoFondo, MovimientoFondoId};
-use finanzas_dominio::texto::Concepto;
-use finanzas_dominio::usuario::UsuarioId;
 
 /// Lo que entra al fondo.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

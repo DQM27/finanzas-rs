@@ -3,8 +3,8 @@
 //! Lo que pasa del tope sale de la sobra de la quincena; si la sobra no
 //! alcanza, es un retiro del fondo de nivel «descuido».
 
-use crate::dinero::Colones;
-use crate::proporcion::Proporcion;
+use crate::base::dinero::Colones;
+use crate::base::proporcion::Proporcion;
 use thiserror::Error;
 
 /// Debajo de esta parte del tope, la caja está baja (30 %).
@@ -83,7 +83,7 @@ impl CajaChica {
 #[cfg(test)]
 mod tests {
     use super::{CajaChica, ErrorCajaChica, NivelCaja};
-    use crate::dinero::Colones;
+    use crate::base::dinero::Colones;
 
     #[test]
     fn pasajes_y_jugo_dejan_la_caja_baja() {

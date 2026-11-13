@@ -5,13 +5,13 @@
 use crate::errores::ErrorAplicacion;
 use crate::puertos::{Reloj, RepositorioExtras, RepositorioPerfiles, RepositorioQuincenas};
 use chrono::{Datelike, NaiveDate};
+use finanzas_dominio::base::dinero::Colones;
+use finanzas_dominio::base::texto::Concepto;
+use finanzas_dominio::base::usuario::UsuarioId;
 use finanzas_dominio::calendario::Corte;
-use finanzas_dominio::dinero::Colones;
-use finanzas_dominio::extra::Extra;
+use finanzas_dominio::extras::Extra;
 use finanzas_dominio::perfil::Perfil;
 use finanzas_dominio::quincena::{Balance, IngresosAutomaticos, Lado, Linea, Quincena};
-use finanzas_dominio::texto::Concepto;
-use finanzas_dominio::usuario::UsuarioId;
 
 /// Una quincena con sus números ya calculados por el dominio.
 #[derive(Debug, Clone, PartialEq, Eq)]

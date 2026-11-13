@@ -4,10 +4,10 @@ use crate::casos_de_uso::consultar_caja_chica::{ConsultarCajaChica, ResumenCaja}
 use crate::errores::ErrorAplicacion;
 use crate::puertos::{GeneradorIds, Reloj, RepositorioGastos, RepositorioPerfiles};
 use chrono::NaiveDate;
-use finanzas_dominio::dinero::Colones;
-use finanzas_dominio::gasto::{Categoria, DatosGasto, Gasto, GastoId, Origen};
-use finanzas_dominio::texto::Concepto;
-use finanzas_dominio::usuario::UsuarioId;
+use finanzas_dominio::base::dinero::Colones;
+use finanzas_dominio::base::texto::Concepto;
+use finanzas_dominio::base::usuario::UsuarioId;
+use finanzas_dominio::gastos::{Categoria, DatosGasto, Gasto, GastoId, Origen};
 
 /// Lo que llega desde la interfaz.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -3,9 +3,9 @@
 use crate::errores::ErrorAplicacion;
 use crate::puertos::{GeneradorIds, RepositorioExtras, RepositorioPerfiles};
 use chrono::NaiveDate;
-use finanzas_dominio::dinero::Colones;
-use finanzas_dominio::extra::{Extra, ExtraId, TipoExtra};
-use finanzas_dominio::usuario::UsuarioId;
+use finanzas_dominio::base::dinero::Colones;
+use finanzas_dominio::base::usuario::UsuarioId;
+use finanzas_dominio::extras::{Extra, ExtraId, TipoExtra};
 
 /// Lo que llega desde la interfaz.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

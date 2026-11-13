@@ -7,9 +7,9 @@ use crate::casos_de_uso::registrar_extra::ExtraRegistrada;
 use crate::errores::ErrorAplicacion;
 use crate::puertos::{RepositorioExtras, RepositorioFondo, RepositorioGastos, RepositorioPerfiles};
 use chrono::NaiveDate;
-use finanzas_dominio::gasto::Gasto;
-use finanzas_dominio::movimientos_fondo::MovimientoFondo;
-use finanzas_dominio::usuario::UsuarioId;
+use finanzas_dominio::base::usuario::UsuarioId;
+use finanzas_dominio::fondo::movimientos::MovimientoFondo;
+use finanzas_dominio::gastos::Gasto;
 
 /// Caso de uso: los gastos de un rango de fechas, ambos incluidos.
 #[derive(Debug)]

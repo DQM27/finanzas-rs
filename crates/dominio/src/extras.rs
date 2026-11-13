@@ -1,9 +1,9 @@
 //! Horas extra y feriados trabajados.
 
+use crate::base::dinero::Colones;
+use crate::base::usuario::UsuarioId;
 use crate::calendario::CalendarioCortes;
-use crate::dinero::Colones;
 use crate::perfil::{PerfilSalarial, TarifasExtra};
-use crate::usuario::UsuarioId;
 use chrono::NaiveDate;
 use thiserror::Error;
 use uuid::Uuid;
@@ -160,11 +160,11 @@ pub fn neto_en_pago(
 #[cfg(test)]
 mod tests {
     use super::{ErrorExtra, Extra, ExtraId, TipoExtra, neto_en_pago};
+    use crate::base::dinero::Colones;
+    use crate::base::proporcion::Proporcion;
+    use crate::base::usuario::UsuarioId;
     use crate::calendario::{CalendarioCortes, Corte};
-    use crate::dinero::Colones;
     use crate::perfil::{PerfilSalarial, TarifasExtra};
-    use crate::proporcion::Proporcion;
-    use crate::usuario::UsuarioId;
     use chrono::NaiveDate;
     use uuid::Uuid;
 

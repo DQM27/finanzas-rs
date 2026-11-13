@@ -11,8 +11,8 @@ mod tests {
     use finanzas_aplicacion::errores::ErrorAplicacion;
     use finanzas_aplicacion::puertos::{RepositorioExtras, RepositorioPerfiles};
     use finanzas_contrato::{DANIEL, OTRO, perfil};
-    use finanzas_dominio::dinero::Colones;
-    use finanzas_dominio::extra::{Extra, ExtraId, TipoExtra};
+    use finanzas_dominio::base::dinero::Colones;
+    use finanzas_dominio::extras::{Extra, ExtraId, TipoExtra};
     use finanzas_dominio::quincena::{ErrorQuincena, Lado};
     use finanzas_infra_memoria::{
         ExtrasEnMemoria, PerfilesEnMemoria, QuincenasEnMemoria, RelojFijo,

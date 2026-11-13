@@ -10,17 +10,17 @@ use finanzas_aplicacion::puertos::{
     RepositorioExtras, RepositorioFondo, RepositorioGastos, RepositorioPerfiles,
     RepositorioQuincenas,
 };
-use finanzas_dominio::caja_chica::CajaChica;
+use finanzas_dominio::base::proporcion::Proporcion;
+use finanzas_dominio::base::texto::Concepto;
+use finanzas_dominio::base::usuario::UsuarioId;
 use finanzas_dominio::calendario::{CalendarioCortes, Corte};
-use finanzas_dominio::extra::{Extra, ExtraId, TipoExtra};
+use finanzas_dominio::extras::{Extra, ExtraId, TipoExtra};
 use finanzas_dominio::fondo::PlanReposicion;
-use finanzas_dominio::gasto::{DatosGasto, Gasto, GastoId};
-use finanzas_dominio::movimientos_fondo::{Movimiento, MovimientoFondo, MovimientoFondoId};
+use finanzas_dominio::fondo::movimientos::{Movimiento, MovimientoFondo, MovimientoFondoId};
+use finanzas_dominio::gastos::caja_chica::CajaChica;
+use finanzas_dominio::gastos::{DatosGasto, Gasto, GastoId};
 use finanzas_dominio::perfil::{Perfil, PerfilSalarial, TarifasExtra};
-use finanzas_dominio::proporcion::Proporcion;
 use finanzas_dominio::quincena::{Linea, Quincena};
-use finanzas_dominio::texto::Concepto;
-use finanzas_dominio::usuario::UsuarioId;
 use std::fmt::Display;
 
 /// Todos los repositorios sobre una misma conexión.

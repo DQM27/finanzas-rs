@@ -8,10 +8,10 @@ mod tests {
         SolicitudSacar,
     };
     use finanzas_aplicacion::errores::ErrorAplicacion;
-    use finanzas_dominio::dinero::Colones;
+    use finanzas_dominio::base::dinero::Colones;
+    use finanzas_dominio::base::usuario::UsuarioId;
+    use finanzas_dominio::fondo::movimientos::{ErrorFondo, EstadoFondo};
     use finanzas_dominio::fondo::{Evaluacion, NivelEmergencia, RechazoRetiro};
-    use finanzas_dominio::movimientos_fondo::{ErrorFondo, EstadoFondo};
-    use finanzas_dominio::usuario::UsuarioId;
     use finanzas_infra_memoria::{FondoEnMemoria, IdsSecuenciales, RelojFijo};
     use uuid::Uuid;
 

@@ -7,10 +7,10 @@
 //! Las reposiciones pagan primero el retiro más viejo. Como cada retiro se
 //! repone con su recargo, el recargo vuelve al fondo y nadie se lo queda (F7).
 
-use crate::dinero::Colones;
+use crate::base::dinero::Colones;
+use crate::base::texto::Concepto;
+use crate::base::usuario::UsuarioId;
 use crate::fondo::{Evaluacion, NivelEmergencia, PlanReposicion, SolicitudRetiro};
-use crate::texto::Concepto;
-use crate::usuario::UsuarioId;
 use chrono::NaiveDate;
 use thiserror::Error;
 use uuid::Uuid;
@@ -289,10 +289,10 @@ pub fn deshacible(
 #[cfg(test)]
 mod tests {
     use super::{ErrorFondo, EstadoFondo, MovimientoFondo, MovimientoFondoId, deshacible};
-    use crate::dinero::Colones;
+    use crate::base::dinero::Colones;
+    use crate::base::texto::Concepto;
+    use crate::base::usuario::UsuarioId;
     use crate::fondo::{Evaluacion, NivelEmergencia, RechazoRetiro, decidir_retiro};
-    use crate::texto::Concepto;
-    use crate::usuario::UsuarioId;
     use chrono::NaiveDate;
     use uuid::Uuid;
 

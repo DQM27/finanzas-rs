@@ -3,7 +3,7 @@
 use chrono::NaiveDate;
 use ciborium::Value;
 use finanzas_aplicacion::errores::ErrorRepositorio;
-use finanzas_dominio::dinero::Colones;
+use finanzas_dominio::base::dinero::Colones;
 use uuid::Uuid;
 
 /// Etiqueta CBOR con que SurrealDB marca `NONE`.

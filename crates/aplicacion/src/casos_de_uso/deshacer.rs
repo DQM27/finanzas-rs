@@ -5,10 +5,10 @@
 
 use crate::errores::ErrorAplicacion;
 use crate::puertos::{RepositorioExtras, RepositorioFondo, RepositorioGastos};
-use finanzas_dominio::extra::ExtraId;
-use finanzas_dominio::gasto::GastoId;
-use finanzas_dominio::movimientos_fondo::{MovimientoFondoId, deshacible};
-use finanzas_dominio::usuario::UsuarioId;
+use finanzas_dominio::base::usuario::UsuarioId;
+use finanzas_dominio::extras::ExtraId;
+use finanzas_dominio::fondo::movimientos::{MovimientoFondoId, deshacible};
+use finanzas_dominio::gastos::GastoId;
 
 /// Qué se quiere deshacer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

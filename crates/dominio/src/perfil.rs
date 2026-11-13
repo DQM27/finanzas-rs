@@ -3,12 +3,12 @@
 //! Ningún número personal está fijo en el código: el salario, los rebajos, las
 //! tarifas de las extras y el tope de la caja chica son de cada persona.
 
-use crate::caja_chica::CajaChica;
+use crate::base::dinero::Colones;
+use crate::base::proporcion::Proporcion;
+use crate::base::usuario::UsuarioId;
 use crate::calendario::CalendarioCortes;
-use crate::dinero::Colones;
-use crate::extra::TipoExtra;
-use crate::proporcion::Proporcion;
-use crate::usuario::UsuarioId;
+use crate::extras::TipoExtra;
+use crate::gastos::caja_chica::CajaChica;
 use thiserror::Error;
 
 /// Cómo se calcula el neto de lo que se gana.
@@ -188,8 +188,8 @@ impl Perfil {
 #[cfg(test)]
 mod tests {
     use super::{ErrorPerfil, PerfilSalarial};
-    use crate::dinero::Colones;
-    use crate::proporcion::Proporcion;
+    use crate::base::dinero::Colones;
+    use crate::base::proporcion::Proporcion;
 
     fn perfil_de_daniel() -> PerfilSalarial {
         PerfilSalarial::new(

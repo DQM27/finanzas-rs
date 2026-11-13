@@ -42,11 +42,32 @@ mod tests {
         }
     }
 
+    /// Todos los `.rs` de una carpeta y de las de adentro: el dominio está
+    /// partido en módulos con subcarpetas y ninguno queda sin vigilar.
+    fn archivos_rust(carpeta: &Path) -> Vec<std::path::PathBuf> {
+        let mut encontrados = Vec::new();
+        for entrada in fs::read_dir(carpeta).expect("carpeta legible") {
+            let ruta = entrada.expect("entrada legible").path();
+            if ruta.is_dir() {
+                encontrados.extend(archivos_rust(&ruta));
+            } else if ruta.extension().is_some_and(|e| e == "rs") {
+                encontrados.push(ruta);
+            }
+        }
+        encontrados
+    }
+
     #[test]
     fn el_codigo_del_dominio_no_toca_el_mundo_exterior() {
         let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
-        for entrada in fs::read_dir(&src).expect("existe src") {
-            let ruta = entrada.expect("entrada legible").path();
+        let archivos = archivos_rust(&src);
+        assert!(
+            archivos.len() >= 12,
+            "se esperaban todos los módulos del dominio y se vieron {}: \
+             ¿la búsqueda dejó de entrar en las subcarpetas?",
+            archivos.len()
+        );
+        for ruta in archivos {
             let codigo = fs::read_to_string(&ruta).expect("archivo legible");
             for prohibido in PROHIBIDO {
                 assert!(

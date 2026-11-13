@@ -66,11 +66,11 @@ use finanzas_aplicacion::puertos::{
     GeneradorIds, Reloj, RepositorioExtras, RepositorioFondo, RepositorioGastos,
     RepositorioPerfiles, RepositorioQuincenas,
 };
-use finanzas_dominio::extra::ExtraId;
+use finanzas_dominio::base::usuario::UsuarioId;
+use finanzas_dominio::extras::ExtraId;
 use finanzas_dominio::fondo::Evaluacion;
-use finanzas_dominio::gasto::GastoId;
-use finanzas_dominio::movimientos_fondo::MovimientoFondoId;
-use finanzas_dominio::usuario::UsuarioId;
+use finanzas_dominio::fondo::movimientos::MovimientoFondoId;
+use finanzas_dominio::gastos::GastoId;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;

@@ -8,8 +8,8 @@ mod tests {
     use finanzas_aplicacion::errores::ErrorRepositorio;
     use finanzas_aplicacion::puertos::RepositorioPerfiles;
     use finanzas_contrato::{DANIEL, OTRO, perfil};
+    use finanzas_dominio::base::usuario::UsuarioId;
     use finanzas_dominio::perfil::Perfil;
-    use finanzas_dominio::usuario::UsuarioId;
     use finanzas_infra_memoria::{
         ExtrasEnMemoria, FondoEnMemoria, GastosEnMemoria, IdsSecuenciales, PerfilesEnMemoria,
         QuincenasEnMemoria, RelojFijo,

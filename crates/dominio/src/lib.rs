@@ -6,16 +6,23 @@
 //! pasan al dominio y guardan lo que el dominio decide.
 //!
 //! El dominio no lee la hora ni genera IDs: los recibe.
+//!
+//! Está partido por tema, un módulo por responsabilidad:
+//!
+//! | Módulo | De qué responde |
+//! |---|---|
+//! | [`base`] | Plata, proporciones, conceptos y dueño: el vocabulario común |
+//! | [`calendario`] | Los cortes de la empresa: qué se reporta cuándo y qué día se paga |
+//! | [`perfil`] | Los números de cada persona: salario, tarifas y tope de caja chica |
+//! | [`gastos`] | Lo que se gasta en el día y la caja chica |
+//! | [`extras`] | Las extras trabajadas: cuánto dejan netas y en qué pago caen |
+//! | [`quincena`] | El presupuesto de cada pago y la suma del mes |
+//! | [`fondo`] | El fondo de emergencia: cuándo se puede sacar y cómo se repone |
 
-pub mod caja_chica;
+pub mod base;
 pub mod calendario;
-pub mod dinero;
-pub mod extra;
+pub mod extras;
 pub mod fondo;
-pub mod gasto;
-pub mod movimientos_fondo;
+pub mod gastos;
 pub mod perfil;
-pub mod proporcion;
 pub mod quincena;
-pub mod texto;
-pub mod usuario;

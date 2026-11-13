@@ -6,12 +6,12 @@
 use crate::errores::ErrorAplicacion;
 use crate::puertos::RepositorioPerfiles;
 use chrono::NaiveDate;
-use finanzas_dominio::caja_chica::CajaChica;
+use finanzas_dominio::base::dinero::Colones;
+use finanzas_dominio::base::proporcion::Proporcion;
+use finanzas_dominio::base::usuario::UsuarioId;
 use finanzas_dominio::calendario::{CalendarioCortes, Corte};
-use finanzas_dominio::dinero::Colones;
+use finanzas_dominio::gastos::caja_chica::CajaChica;
 use finanzas_dominio::perfil::{Perfil, PerfilSalarial, TarifasExtra};
-use finanzas_dominio::proporcion::Proporcion;
-use finanzas_dominio::usuario::UsuarioId;
 
 /// Un corte tal como llega de la interfaz.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

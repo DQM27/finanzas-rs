@@ -7,12 +7,12 @@
 //! salario neto y las extras de ese pago, Q7) y los otros ingresos que se
 //! escriben a mano (una ayuda, un saldo que quedó).
 
+use crate::base::dinero::Colones;
+use crate::base::texto::Concepto;
+use crate::base::usuario::UsuarioId;
 use crate::calendario::CalendarioCortes;
-use crate::dinero::Colones;
-use crate::extra::{Extra, neto_en_pago};
+use crate::extras::{Extra, neto_en_pago};
 use crate::perfil::PerfilSalarial;
-use crate::texto::Concepto;
-use crate::usuario::UsuarioId;
 use chrono::NaiveDate;
 use std::iter::Sum;
 use thiserror::Error;
@@ -300,13 +300,13 @@ impl Quincena {
 #[cfg(test)]
 mod tests {
     use super::{Balance, ErrorQuincena, IngresosAutomaticos, Lado, Linea, Quincena};
+    use crate::base::dinero::Colones;
+    use crate::base::proporcion::Proporcion;
+    use crate::base::texto::Concepto;
+    use crate::base::usuario::UsuarioId;
     use crate::calendario::{CalendarioCortes, Corte};
-    use crate::dinero::Colones;
-    use crate::extra::{Extra, ExtraId, TipoExtra};
+    use crate::extras::{Extra, ExtraId, TipoExtra};
     use crate::perfil::PerfilSalarial;
-    use crate::proporcion::Proporcion;
-    use crate::texto::Concepto;
-    use crate::usuario::UsuarioId;
     use chrono::NaiveDate;
     use uuid::Uuid;
 

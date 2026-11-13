@@ -3,9 +3,9 @@
 
 use crate::cbor::error;
 use finanzas_aplicacion::errores::ErrorRepositorio;
-use finanzas_dominio::extra::TipoExtra;
+use finanzas_dominio::extras::TipoExtra;
 use finanzas_dominio::fondo::NivelEmergencia;
-use finanzas_dominio::gasto::{Categoria, Origen};
+use finanzas_dominio::gastos::{Categoria, Origen};
 
 pub const fn categoria(c: Categoria) -> &'static str {
     match c {
@@ -102,9 +102,9 @@ mod tests {
     use super::{
         a_categoria, a_nivel, a_origen, a_tipo_extra, categoria, nivel, origen, tipo_extra,
     };
-    use finanzas_dominio::extra::TipoExtra;
+    use finanzas_dominio::extras::TipoExtra;
     use finanzas_dominio::fondo::NivelEmergencia;
-    use finanzas_dominio::gasto::{Categoria, Origen};
+    use finanzas_dominio::gastos::{Categoria, Origen};
 
     #[test]
     fn todo_codigo_va_y_vuelve() {

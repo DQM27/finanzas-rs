@@ -6,8 +6,8 @@
 
 use crate::errores::ErrorAplicacion;
 use crate::puertos::{Reloj, RepositorioPerfiles};
+use finanzas_dominio::base::usuario::UsuarioId;
 use finanzas_dominio::calendario::Corte;
-use finanzas_dominio::usuario::UsuarioId;
 
 /// El calendario visto desde hoy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

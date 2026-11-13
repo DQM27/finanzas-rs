@@ -11,7 +11,7 @@
 
 mod jwt;
 
-use finanzas_dominio::usuario::UsuarioId;
+use finanzas_dominio::base::usuario::UsuarioId;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -107,7 +107,7 @@ impl Directorio {
 #[cfg(test)]
 mod tests {
     use super::{Directorio, ErrorAcceso};
-    use finanzas_dominio::usuario::UsuarioId;
+    use finanzas_dominio::base::usuario::UsuarioId;
     use uuid::Uuid;
 
     const DANIEL: &str = "000000da-0000-4000-8000-000000000001";

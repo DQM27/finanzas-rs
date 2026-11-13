@@ -1,15 +1,15 @@
 //! Errores de los casos de uso.
 
 use chrono::NaiveDate;
-use finanzas_dominio::caja_chica::ErrorCajaChica;
+use finanzas_dominio::base::texto::ErrorConcepto;
 use finanzas_dominio::calendario::ErrorCalendario;
-use finanzas_dominio::extra::ErrorExtra;
+use finanzas_dominio::extras::ErrorExtra;
 use finanzas_dominio::fondo::RechazoRetiro;
-use finanzas_dominio::gasto::ErrorGasto;
-use finanzas_dominio::movimientos_fondo::ErrorFondo;
+use finanzas_dominio::fondo::movimientos::ErrorFondo;
+use finanzas_dominio::gastos::ErrorGasto;
+use finanzas_dominio::gastos::caja_chica::ErrorCajaChica;
 use finanzas_dominio::perfil::ErrorPerfil;
 use finanzas_dominio::quincena::ErrorQuincena;
-use finanzas_dominio::texto::ErrorConcepto;
 use thiserror::Error;
 
 /// Un adaptador no pudo leer o guardar. Lleva el detalle técnico para el log.
