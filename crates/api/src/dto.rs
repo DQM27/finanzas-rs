@@ -3,13 +3,13 @@
 //! fechas como `AAAA-MM-DD`.
 
 use chrono::NaiveDate;
-use finanzas_aplicacion::casos_de_uso::consultar_caja_chica::ResumenCaja;
-use finanzas_aplicacion::casos_de_uso::cortes::CortesHoy;
+use finanzas_aplicacion::casos_de_uso::calendario::CortesHoy;
+use finanzas_aplicacion::casos_de_uso::extras::ExtraRegistrada;
 use finanzas_aplicacion::casos_de_uso::fondo::{Deposito, RetiroHecho};
+use finanzas_aplicacion::casos_de_uso::gastos::GastoRegistrado;
+use finanzas_aplicacion::casos_de_uso::gastos::ResumenCaja;
 use finanzas_aplicacion::casos_de_uso::perfil::{CortePedido, ResumenPerfil};
 use finanzas_aplicacion::casos_de_uso::quincena::{LineaPedida, ResumenMes, ResumenQuincena};
-use finanzas_aplicacion::casos_de_uso::registrar_extra::ExtraRegistrada;
-use finanzas_aplicacion::casos_de_uso::registrar_gasto::GastoRegistrado;
 use finanzas_dominio::base::dinero::Colones;
 use finanzas_dominio::calendario::Corte;
 use finanzas_dominio::extras::TipoExtra;

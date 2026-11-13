@@ -1,4 +1,5 @@
-//! El fondo de emergencia: consultar, sacar, reponer y aportar.
+//! El fondo de emergencia: consultar, sacar, reponer, aportar, listar sus
+//! movimientos y deshacer el último.
 //!
 //! Los casos de uso sólo leen los movimientos, se los dan al dominio y guardan
 //! lo que el dominio autoriza. Ninguna regla del fondo vive aquí.
@@ -8,7 +9,9 @@ use crate::puertos::{GeneradorIds, Reloj, RepositorioFondo};
 use finanzas_dominio::base::dinero::Colones;
 use finanzas_dominio::base::texto::Concepto;
 use finanzas_dominio::base::usuario::UsuarioId;
-use finanzas_dominio::fondo::movimientos::{EstadoFondo, MovimientoFondo, MovimientoFondoId};
+use finanzas_dominio::fondo::movimientos::{
+    EstadoFondo, MovimientoFondo, MovimientoFondoId, deshacible,
+};
 use finanzas_dominio::fondo::{Evaluacion, NivelEmergencia, PlanReposicion, decidir_retiro};
 
 /// Lo que entra al fondo.
@@ -157,5 +160,56 @@ where
         self.fondo.guardar(&movimiento).await?;
         movimientos.push(movimiento);
         Ok(EstadoFondo::de(&movimientos))
+    }
+}
+
+/// Caso de uso: los movimientos del fondo, del más viejo al más nuevo.
+#[derive(Debug)]
+pub struct ListarMovimientosFondo<'a, F> {
+    fondo: &'a F,
+}
+
+impl<'a, F: RepositorioFondo> ListarMovimientosFondo<'a, F> {
+    /// Arma el caso de uso.
+    pub const fn new(fondo: &'a F) -> Self {
+        Self { fondo }
+    }
+
+    /// Los movimientos del usuario.
+    pub async fn ejecutar(
+        &self,
+        usuario: UsuarioId,
+    ) -> Result<Vec<MovimientoFondo>, ErrorAplicacion> {
+        Ok(self.fondo.de_usuario(usuario).await?)
+    }
+}
+
+/// Caso de uso: deshacer el último movimiento del fondo.
+#[derive(Debug)]
+pub struct DeshacerMovimientoFondo<'a, F> {
+    fondo: &'a F,
+}
+
+impl<'a, F: RepositorioFondo> DeshacerMovimientoFondo<'a, F> {
+    /// Arma el caso de uso.
+    pub const fn new(fondo: &'a F) -> Self {
+        Self { fondo }
+    }
+
+    /// Borra el movimiento si el usuario es su dueño (U1) y el dominio lo
+    /// permite: sólo el último, porque borrar uno del medio dejaría
+    /// reposiciones pagando un retiro que ya no existe (U2).
+    pub async fn ejecutar(
+        &self,
+        usuario: UsuarioId,
+        id: MovimientoFondoId,
+    ) -> Result<(), ErrorAplicacion> {
+        let movimientos = self.fondo.de_usuario(usuario).await?;
+        deshacible(&movimientos, id).ok_or(ErrorAplicacion::NoEncontrado)??;
+        if self.fondo.borrar(usuario, id).await? {
+            Ok(())
+        } else {
+            Err(ErrorAplicacion::NoEncontrado)
+        }
     }
 }

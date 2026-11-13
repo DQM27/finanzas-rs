@@ -1,4 +1,5 @@
-//! Anotar una extra trabajada: cuánto deja neto y en qué pago cae.
+//! Las extras trabajadas: anotarlas, listarlas con su neto y su fecha de
+//! pago, y deshacer la que se anotó mal.
 
 use crate::errores::ErrorAplicacion;
 use crate::puertos::{GeneradorIds, RepositorioExtras, RepositorioPerfiles};
@@ -75,5 +76,69 @@ where
             fecha_pago: extra.fecha_pago(perfil.calendario()),
             extra,
         })
+    }
+}
+
+/// Caso de uso: todas las extras, con su neto y su fecha de pago.
+#[derive(Debug)]
+pub struct ListarExtras<'a, P, E> {
+    perfiles: &'a P,
+    extras: &'a E,
+}
+
+impl<'a, P, E> ListarExtras<'a, P, E>
+where
+    P: RepositorioPerfiles,
+    E: RepositorioExtras,
+{
+    /// Arma el caso de uso.
+    pub const fn new(perfiles: &'a P, extras: &'a E) -> Self {
+        Self { perfiles, extras }
+    }
+
+    /// Las extras del usuario con lo que el dominio calcula de cada una.
+    pub async fn ejecutar(
+        &self,
+        usuario: UsuarioId,
+    ) -> Result<Vec<ExtraRegistrada>, ErrorAplicacion> {
+        let perfil = self
+            .perfiles
+            .perfil(usuario)
+            .await?
+            .ok_or(ErrorAplicacion::PerfilNoEncontrado)?;
+        Ok(self
+            .extras
+            .de_usuario(usuario)
+            .await?
+            .into_iter()
+            .map(|extra| ExtraRegistrada {
+                neto: extra.neto(perfil.salarial()),
+                fecha_pago: extra.fecha_pago(perfil.calendario()),
+                extra,
+            })
+            .collect())
+    }
+}
+
+/// Caso de uso: deshacer una extra que se anotó mal.
+#[derive(Debug)]
+pub struct DeshacerExtra<'a, E> {
+    extras: &'a E,
+}
+
+impl<'a, E: RepositorioExtras> DeshacerExtra<'a, E> {
+    /// Arma el caso de uso.
+    pub const fn new(extras: &'a E) -> Self {
+        Self { extras }
+    }
+
+    /// Borra la extra si el usuario es su dueña (U1). Un id de otro es como
+    /// si no existiera.
+    pub async fn ejecutar(&self, usuario: UsuarioId, id: ExtraId) -> Result<(), ErrorAplicacion> {
+        if self.extras.borrar(usuario, id).await? {
+            Ok(())
+        } else {
+            Err(ErrorAplicacion::NoEncontrado)
+        }
     }
 }

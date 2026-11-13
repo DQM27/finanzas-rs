@@ -6,9 +6,9 @@
 #[cfg(test)]
 mod tests {
     use chrono::NaiveDate;
-    use finanzas_aplicacion::casos_de_uso::consultar_caja_chica::ConsultarCajaChica;
-    use finanzas_aplicacion::casos_de_uso::registrar_extra::{RegistrarExtra, SolicitudExtra};
-    use finanzas_aplicacion::casos_de_uso::registrar_gasto::{RegistrarGasto, SolicitudGasto};
+    use finanzas_aplicacion::casos_de_uso::extras::{RegistrarExtra, SolicitudExtra};
+    use finanzas_aplicacion::casos_de_uso::gastos::ConsultarCajaChica;
+    use finanzas_aplicacion::casos_de_uso::gastos::{RegistrarGasto, SolicitudGasto};
     use finanzas_aplicacion::errores::ErrorAplicacion;
     use finanzas_dominio::base::dinero::Colones;
     use finanzas_dominio::base::proporcion::Proporcion;

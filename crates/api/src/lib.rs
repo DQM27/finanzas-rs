@@ -47,21 +47,21 @@ use dto::{
     Presupuesto, QuincenaDto, RetiroDto,
 };
 use errores::{ErrorApi, Resultado};
-use finanzas_aplicacion::casos_de_uso::consultar_caja_chica::ConsultarCajaChica;
-use finanzas_aplicacion::casos_de_uso::consultas::{
-    ListarExtras, ListarGastos, ListarMovimientosFondo,
-};
-use finanzas_aplicacion::casos_de_uso::cortes::ConsultarCortesHoy;
-use finanzas_aplicacion::casos_de_uso::deshacer::{Deshacer, QueDeshacer};
+use finanzas_aplicacion::casos_de_uso::calendario::ConsultarCortesHoy;
+use finanzas_aplicacion::casos_de_uso::extras::{DeshacerExtra, ListarExtras};
+use finanzas_aplicacion::casos_de_uso::extras::{RegistrarExtra, SolicitudExtra};
 use finanzas_aplicacion::casos_de_uso::fondo::{
     ConsultarFondo, DepositarEnFondo, SacarDelFondo, SolicitudDeposito, SolicitudSacar,
 };
+use finanzas_aplicacion::casos_de_uso::fondo::{DeshacerMovimientoFondo, ListarMovimientosFondo};
+use finanzas_aplicacion::casos_de_uso::gastos::ConsultarCajaChica;
+use finanzas_aplicacion::casos_de_uso::gastos::{DeshacerGasto, ListarGastos};
+use finanzas_aplicacion::casos_de_uso::gastos::{RegistrarGasto, SolicitudGasto};
 use finanzas_aplicacion::casos_de_uso::perfil::{ConsultarPerfil, GuardarPerfil, SolicitudPerfil};
 use finanzas_aplicacion::casos_de_uso::quincena::{
     Presupuestos, SolicitudMarca, SolicitudPresupuesto,
 };
-use finanzas_aplicacion::casos_de_uso::registrar_extra::{RegistrarExtra, SolicitudExtra};
-use finanzas_aplicacion::casos_de_uso::registrar_gasto::{RegistrarGasto, SolicitudGasto};
+use finanzas_aplicacion::errores::ErrorAplicacion;
 use finanzas_aplicacion::puertos::{
     GeneradorIds, Reloj, RepositorioExtras, RepositorioFondo, RepositorioGastos,
     RepositorioPerfiles, RepositorioQuincenas,
@@ -278,11 +278,19 @@ async fn registro<C: Contexto>(
             }),
         (Metodo::Post, ["extras"]) => registrar_extra(ctx, usuario, p.cuerpo).await,
         (Metodo::Delete, ["gastos", texto]) => match id(texto) {
-            Ok(uuid) => deshacer(ctx, usuario, QueDeshacer::Gasto(GastoId::new(uuid))).await,
+            Ok(uuid) => sin_contenido(
+                DeshacerGasto::new(ctx.gastos())
+                    .ejecutar(usuario, GastoId::new(uuid))
+                    .await,
+            ),
             Err(e) => Err(e),
         },
         (Metodo::Delete, ["extras", texto]) => match id(texto) {
-            Ok(uuid) => deshacer(ctx, usuario, QueDeshacer::Extra(ExtraId::new(uuid))).await,
+            Ok(uuid) => sin_contenido(
+                DeshacerExtra::new(ctx.extras())
+                    .ejecutar(usuario, ExtraId::new(uuid))
+                    .await,
+            ),
             Err(e) => Err(e),
         },
         _ => return None,
@@ -346,10 +354,11 @@ async fn fondo<C: Contexto>(
         (Metodo::Post, ["fondo", "retiros"]) => sacar(ctx, usuario, p.cuerpo).await,
         (Metodo::Post, ["fondo", "depositos"]) => depositar(ctx, usuario, p.cuerpo).await,
         (Metodo::Delete, ["fondo", "movimientos", texto]) => match id(texto) {
-            Ok(uuid) => {
-                let que = QueDeshacer::MovimientoFondo(MovimientoFondoId::new(uuid));
-                deshacer(ctx, usuario, que).await
-            }
+            Ok(uuid) => sin_contenido(
+                DeshacerMovimientoFondo::new(ctx.fondo())
+                    .ejecutar(usuario, MovimientoFondoId::new(uuid))
+                    .await,
+            ),
             Err(e) => Err(e),
         },
         _ => return None,
@@ -485,9 +494,8 @@ fn es_ruta_conocida(partes: &[&str]) -> bool {
     )
 }
 
-async fn deshacer<C: Contexto>(ctx: &C, usuario: UsuarioId, que: QueDeshacer) -> Resultado {
-    Deshacer::new(ctx.gastos(), ctx.extras(), ctx.fondo())
-        .ejecutar(usuario, que)
-        .await?;
+/// Un borrado que salió bien no devuelve cuerpo.
+fn sin_contenido(r: Result<(), ErrorAplicacion>) -> Resultado {
+    r.map_err(ErrorApi::from)?;
     SIN_CONTENIDO
 }

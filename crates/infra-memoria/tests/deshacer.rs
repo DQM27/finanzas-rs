@@ -3,16 +3,22 @@
 #[cfg(test)]
 mod tests {
     use chrono::NaiveDate;
-    use finanzas_aplicacion::casos_de_uso::deshacer::{Deshacer, QueDeshacer};
-    use finanzas_aplicacion::casos_de_uso::fondo::{
-        ConsultarFondo, DepositarEnFondo, Deposito, SacarDelFondo, SolicitudDeposito,
-        SolicitudSacar,
+    use finanzas_aplicacion::casos_de_uso::extras::{
+        DeshacerExtra, RegistrarExtra, SolicitudExtra,
     };
-    use finanzas_aplicacion::casos_de_uso::registrar_gasto::{RegistrarGasto, SolicitudGasto};
+    use finanzas_aplicacion::casos_de_uso::fondo::{
+        ConsultarFondo, DepositarEnFondo, Deposito, DeshacerMovimientoFondo, SacarDelFondo,
+        SolicitudDeposito, SolicitudSacar,
+    };
+    use finanzas_aplicacion::casos_de_uso::gastos::{
+        DeshacerGasto, RegistrarGasto, SolicitudGasto,
+    };
     use finanzas_aplicacion::errores::ErrorAplicacion;
     use finanzas_aplicacion::puertos::{GeneradorIds, RepositorioPerfiles};
     use finanzas_contrato::{DANIEL, OTRO, perfil};
     use finanzas_dominio::base::dinero::Colones;
+    use finanzas_dominio::base::usuario::UsuarioId;
+    use finanzas_dominio::extras::{ExtraId, TipoExtra};
     use finanzas_dominio::fondo::movimientos::{ErrorFondo, MovimientoFondoId};
     use finanzas_dominio::fondo::{Evaluacion, NivelEmergencia};
     use finanzas_dominio::gastos::{Categoria, GastoId, Origen};
@@ -45,14 +51,16 @@ mod tests {
             m
         }
 
-        fn deshacer(
+        fn deshacer_gasto(&self, usuario: UsuarioId, id: GastoId) -> Result<(), ErrorAplicacion> {
+            pollster::block_on(DeshacerGasto::new(&self.gastos).ejecutar(usuario, id))
+        }
+
+        fn deshacer_movimiento(
             &self,
-            usuario: finanzas_dominio::base::usuario::UsuarioId,
-            que: QueDeshacer,
+            usuario: UsuarioId,
+            id: MovimientoFondoId,
         ) -> Result<(), ErrorAplicacion> {
-            pollster::block_on(
-                Deshacer::new(&self.gastos, &self.extras, &self.fondo).ejecutar(usuario, que),
-            )
+            pollster::block_on(DeshacerMovimientoFondo::new(&self.fondo).ejecutar(usuario, id))
         }
 
         /// Deposita y devuelve el id que le tocó al movimiento.
@@ -69,6 +77,10 @@ mod tests {
             )
             .unwrap();
             self.ultimo_id()
+        }
+
+        fn deshacer_extra(&self, usuario: UsuarioId, id: ExtraId) -> Result<(), ErrorAplicacion> {
+            pollster::block_on(DeshacerExtra::new(&self.extras).ejecutar(usuario, id))
         }
 
         fn ultimo_id(&self) -> MovimientoFondoId {
@@ -100,23 +112,20 @@ mod tests {
             "antes de deshacer"
         );
 
-        let id = QueDeshacer::Gasto(r.gasto.id());
+        let id = r.gasto.id();
         assert_eq!(
-            m.deshacer(OTRO, id),
+            m.deshacer_gasto(OTRO, id),
             Err(ErrorAplicacion::NoEncontrado),
             "otro usuario no puede borrarlo (U1)"
         );
-        assert_eq!(m.deshacer(DANIEL, id), Ok(()), "el dueño sí");
+        assert_eq!(m.deshacer_gasto(DANIEL, id), Ok(()), "el dueño sí");
         assert_eq!(
-            m.deshacer(DANIEL, id),
+            m.deshacer_gasto(DANIEL, id),
             Err(ErrorAplicacion::NoEncontrado),
             "ya no existe"
         );
         assert_eq!(
-            m.deshacer(
-                DANIEL,
-                QueDeshacer::Gasto(GastoId::new(Uuid::from_u128(999)))
-            ),
+            m.deshacer_gasto(DANIEL, GastoId::new(Uuid::from_u128(999))),
             Err(ErrorAplicacion::NoEncontrado),
             "un id inventado"
         );
@@ -144,22 +153,22 @@ mod tests {
         let reposicion = m.depositar(Deposito::Reposicion, 7_000);
 
         assert_eq!(
-            m.deshacer(DANIEL, QueDeshacer::MovimientoFondo(retiro)),
+            m.deshacer_movimiento(DANIEL, retiro),
             Err(ErrorAplicacion::Fondo(ErrorFondo::SoloElUltimo)),
             "el retiro ya tiene una reposición encima (U2)"
         );
         assert_eq!(
-            m.deshacer(OTRO, QueDeshacer::MovimientoFondo(reposicion)),
+            m.deshacer_movimiento(OTRO, reposicion),
             Err(ErrorAplicacion::NoEncontrado),
             "lo del fondo de Daniel no lo toca otro"
         );
         assert_eq!(
-            m.deshacer(DANIEL, QueDeshacer::MovimientoFondo(reposicion)),
+            m.deshacer_movimiento(DANIEL, reposicion),
             Ok(()),
             "la reposición es lo último"
         );
         assert_eq!(
-            m.deshacer(DANIEL, QueDeshacer::MovimientoFondo(retiro)),
+            m.deshacer_movimiento(DANIEL, retiro),
             Ok(()),
             "ahora el retiro es lo último"
         );
@@ -167,9 +176,36 @@ mod tests {
         assert_eq!(estado.saldo, Colones::new(31_619), "como antes del retiro");
         assert!(!estado.reposicion_pendiente(), "sin nada que reponer");
         assert_eq!(
-            m.deshacer(DANIEL, QueDeshacer::MovimientoFondo(aporte)),
+            m.deshacer_movimiento(DANIEL, aporte),
             Ok(()),
             "y por último el aporte"
+        );
+    }
+
+    #[test]
+    fn deshacer_una_extra_la_saca_del_pago() {
+        let m = Mundo::new();
+        let r = pollster::block_on(
+            RegistrarExtra::new(&m.perfiles, &m.extras, &m.ids).ejecutar(SolicitudExtra {
+                usuario: DANIEL,
+                fecha: NaiveDate::from_ymd_opt(2026, 11, 14).unwrap(),
+                tipo: TipoExtra::Nocturna,
+                monto: None,
+            }),
+        )
+        .unwrap();
+        let id = r.extra.id();
+
+        assert_eq!(
+            m.deshacer_extra(OTRO, id),
+            Err(ErrorAplicacion::NoEncontrado),
+            "una extra ajena no se toca (U1)"
+        );
+        assert_eq!(m.deshacer_extra(DANIEL, id), Ok(()), "la suya sí");
+        assert_eq!(
+            m.deshacer_extra(DANIEL, id),
+            Err(ErrorAplicacion::NoEncontrado),
+            "ya no existe"
         );
     }
 }
