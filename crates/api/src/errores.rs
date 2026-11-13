@@ -3,8 +3,8 @@
 //! expone su detalle al cliente.
 
 use crate::Respuesta;
-use crate::dto::ErrorDto;
 use finanzas_aplicacion::errores::ErrorAplicacion;
+use serde::{Deserialize, Serialize};
 
 pub type Resultado = Result<(u16, String), ErrorApi>;
 
@@ -89,4 +89,11 @@ impl ErrorApi {
             detalle_interno,
         }
     }
+}
+
+/// Un error, siempre con un código estable y un mensaje para mostrar.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ErrorDto {
+    pub codigo: String,
+    pub mensaje: String,
 }
