@@ -12,7 +12,12 @@ routes = [{ pattern = "cf.megabrisas.com", custom_domain = true }]
 
 [build]
 # Primero la PWA (apps/web), después el Worker.
-command = "npm --prefix ../web ci --no-audit --no-fund && npm --prefix ../web run build && cargo install -q worker-build && worker-build --release"
+#
+# `worker-build` va con versión fija y tiene que ir a la par del crate `worker`
+# de Cargo.toml: exige que `worker` sea al menos su misma versión mayor y menor,
+# así que worker-build 0.9 rechaza worker 0.8. Sin fijarlo, cada máquina compila
+# con la versión que tenga instalada y el despliegue falla en la que esté al día.
+command = "npm --prefix ../web ci --no-audit --no-fund && npm --prefix ../web run build && cargo install -q --locked worker-build@0.8.7 && worker-build --release"
 
 # La PWA se sirve como archivos estáticos desde el mismo dominio, así que la
 # sesión de Access es una sola. Sólo /api/* llega al código del Worker; una

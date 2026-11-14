@@ -134,6 +134,14 @@ El build de `wrangler` hace dos cosas, en este orden:
 2. Compila el Worker con `worker-build`, que necesita el objetivo
    `wasm32-unknown-unknown` instalado.
 
+**`worker-build` va a la par del crate `worker`.** Exige que `worker` sea al menos su
+misma versión mayor y menor, así que `worker-build` 0.9 rechaza `worker` 0.8 con
+«Unsupported version». Por eso la versión está fija en el `[build]` de
+`wrangler.toml`: sin fijarla, cada máquina compila con la que tenga instalada y el
+despliegue falla en la que esté al día. Para subir de versión hay que mover las dos en
+el mismo commit: `worker` en `apps/worker/Cargo.toml` y `worker-build` en
+`wrangler.toml`.
+
 La PWA se publica como archivos estáticos del mismo Worker (`[assets]` en
 `wrangler.toml`). Sólo `/api/*` llega al código Rust; cualquier otra ruta que no sea
 un archivo devuelve `index.html`, y la resuelve el router de Angular. Access protege

@@ -156,10 +156,12 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
-      - name: worker-build
-        run: cargo install -q worker-build
-      # La versión mayor va fija: una versión nueva de wrangler se adopta a
-      # propósito, no en medio de un despliegue.
+      # `worker-build` no se instala aquí: lo hace el `[build]` de
+      # wrangler.toml con su versión fija, para que la CI y la PC de Daniel
+      # compilen con la misma.
+      #
+      # La versión mayor de wrangler también va fija: una versión nueva se
+      # adopta a propósito, no en medio de un despliegue.
       - name: Publicar
         run: npx --yes wrangler@4 deploy
         env:
