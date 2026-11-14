@@ -42,3 +42,7 @@ cargo fmt --all -- --check
 cargo clippy --all-targets -- -D warnings
 cargo test
 ```
+
+**La CI publica sola.** Cada subida a `main` que quede verde se despliega a
+`cf.megabrisas.com` sin que nadie corra nada. Es decir: subir a `main` es publicar.
+Lo que no esté listo para que Daniel lo use, no se sube a `main`.

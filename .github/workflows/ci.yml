@@ -125,6 +125,47 @@ jobs:
       - run: npx ng build
       - run: npx ng test --watch=false
 
+  # Publica en Cloudflare, y sólo cuando todo lo de arriba quedó verde.
+  #
+  # Nunca desde un pull request: sólo al subir a `main`. Así el código de
+  # afuera no puede desplegar ni ver los secretos.
+  #
+  # `wrangler deploy` corre el `[build]` de wrangler.toml, que compila primero
+  # la PWA y después el Worker, así que aquí sólo hacen falta las herramientas.
+  desplegar:
+    name: Desplegar a Cloudflare
+    needs: verificado
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Un despliegue no se cancela a la mitad: si llega otro commit, espera.
+    concurrency:
+      group: desplegar
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: apps/worker
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Rust del proyecto
+        run: rustup toolchain install && rustup target add wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: worker-build
+        run: cargo install -q worker-build
+      # La versión mayor va fija: una versión nueva de wrangler se adopta a
+      # propósito, no en medio de un despliegue.
+      - name: Publicar
+        run: npx --yes wrangler@4 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
   # Un solo resultado para exigir en la protección de `main`.
   verificado:
     name: CI verde

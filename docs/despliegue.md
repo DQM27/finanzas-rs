@@ -118,6 +118,10 @@ El UUID de cada persona se genera una vez y no cambia: es la llave de todos sus 
 
 ## 4. Publicar
 
+Lo normal es no publicar a mano: la CI lo hace sola en cada subida a `main` que
+quede verde (ver [«Publicar solo desde la CI»](#publicar-solo-desde-la-ci)). A mano
+sirve para probar un cambio antes de subirlo:
+
 ```text
 cd apps/worker
 npx wrangler deploy
@@ -157,6 +161,41 @@ GNU, que trae su propio enlazador:
 rustup toolchain install 1.97.0-x86_64-pc-windows-gnu --profile minimal -c clippy,rustfmt -t wasm32-unknown-unknown
 RUSTUP_TOOLCHAIN=1.97.0-x86_64-pc-windows-gnu npx wrangler deploy
 ```
+
+### Publicar solo desde la CI
+
+El trabajo `desplegar` de `.github/workflows/ci.yml` publica cuando todo lo demás
+quedó verde. Sólo corre al subir a `main`, nunca desde un pull request: así el código
+de afuera no puede desplegar ni ver los secretos. Dos subidas seguidas no se pisan;
+la segunda espera a que termine la primera.
+
+Necesita dos secretos del repositorio, en *Settings → Secrets and variables →
+Actions*:
+
+| Secreto | De dónde sale |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Un token de API de Cloudflare, creado como se explica abajo |
+| `CLOUDFLARE_ACCOUNT_ID` | El ID de cuenta, en el panel de Cloudflare: *Workers & Pages* → barra de la derecha |
+
+**El token.** En *Mi perfil → Tokens de API → Crear token*, con la plantilla
+**Edit Cloudflare Workers**. Da lo justo para publicar y nada más: no toca Access,
+ni el DNS, ni SurrealDB, ni puede leer los secretos ya cargados.
+
+Conviene acotarlo a la cuenta y a la zona `megabrisas.com`, y dejarlo sin fecha de
+vencimiento sólo si se va a recordar renovarlo; si vence, el despliegue falla con un
+error de autenticación y basta con crear otro y reemplazar el secreto.
+
+El token se ve una sola vez, al crearlo. No va al repositorio ni a un mensaje: se
+pega directo en el secreto de GitHub.
+
+**Si algo falla.** El trabajo `desplegar` muestra el error de `wrangler`. Los dos
+casos comunes:
+
+- *Authentication error*: el token venció, se borró o no tiene el permiso de Workers.
+- *More than one account available*: falta `CLOUDFLARE_ACCOUNT_ID`.
+
+Un despliegue fallido no deja la app rota: Cloudflare sigue sirviendo la versión
+anterior hasta que una nueva entra completa.
 
 ## 5. Comprobar
 
